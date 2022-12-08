@@ -41,7 +41,12 @@ let gameState = {
         character.level = stats.level;
         character.moved = 0;
         character.moves = stats.moves.splice();
+        character.move1Countdown = 0;
+        character.move2Countdown = 0;
+        character.move3Countdown = 0;
+        character.maxHp = stats.health;
         character.stats = stats;
+        character.attackBoost = 0;
         function create(hero){
             gameState.createHealthBar(scene,hero,stats.health);
             stats.integrateMoves(hero);
@@ -53,31 +58,33 @@ let gameState = {
             hero.anims.play(`${hero.sprite}Idle`,true);
             hero.on('pointerdown', function(pointer){
                 if(status == 'ally' && hero.moved == 0 && gameState.attacking == false && gameState.turn == 'player' && hero.health > 0){
+                    
+                    gameState.selectedMove = '';
                     gameState.moveIcon1.setTexture(`emptyIcon`);
                     gameState.moveIcon2.setTexture(`emptyIcon`);
                     gameState.moveIcon3.setTexture(`emptyIcon`);
                     gameState.selectedHero = hero;
-                    if(hero.moves[0]){
+                    console.log(gameState.selectedHero.sprite);
+                    if(hero.moves[0] && hero.move1Countdown == 0){
                         gameState.moveIcon1.setTexture(`${hero.moves[0].sprite}Icon`);
-                        gameState.createMove(scene,hero.moves[0],gameState.moveIcon1,hero);
-                    }if(hero.moves[1]){
+                    }if(hero.moves[1] && hero.move2Countdown == 0){
                         gameState.moveIcon2.setTexture(`${hero.moves[1].sprite}Icon`);
-                        gameState.createMove(scene,hero.moves[1],gameState.moveIcon2,hero);
-                    }if(hero.moves[2]){
+                    }if(hero.moves[2] && hero.move3Countdown == 0){
                         gameState.moveIcon3.setTexture(`${hero.moves[2].sprite}Icon`);
-                        gameState.createMove(scene,hero.moves[2],gameState.moveIcon3,hero);
                     }
-                }else if(status == 'enemy' && gameState.attacking == true){
+                }else if(status == 'enemy' && gameState.attacking == true && gameState.selectedMove.type == 'enemy' && hero.health > 0){
                     gameState.attacking = false;
                     gameState.selectedMove.action(scene,gameState.selectedHero,hero);
                     gameState.selectedHero.moved = 1;
+                    gameState.selectedHero.setTint(0x808080, 0x808080, 0x808080, 0x808080);
                     gameState.moveIcon1.setTexture(`emptyIcon`);
                     gameState.moveIcon2.setTexture(`emptyIcon`);
                     gameState.moveIcon3.setTexture(`emptyIcon`);
-                }else if(status == 'ally' && gameState.attacking == true){
-                    gameState.attacking = false;
+                }else if(status == 'ally' && gameState.attacking == true && gameState.selectedMove.type == 'ally'){
                     gameState.selectedMove.action(scene,gameState.selectedHero,hero);
+                    gameState.attacking = false;
                     gameState.selectedHero.moved = 1;
+                    gameState.selectedHero.setTint(0x808080, 0x808080, 0x808080, 0x808080);
                     gameState.moveIcon1.setTexture(`emptyIcon`);
                     gameState.moveIcon2.setTexture(`emptyIcon`);
                     gameState.moveIcon3.setTexture(`emptyIcon`);
@@ -88,22 +95,7 @@ let gameState = {
     },
     
     createMove: function(scene,move,icon,hero){
-        var moveButton = icon.on('pointerdown', function(pointer){
-            if(hero.moved == 0){
-                gameState.selectedMove = move;
-                if(move.type === "self"){
-                    hero.moved = 1;
-                    gameState.attacking = false;
-                    move.action(scene,hero,null);
-                    gameState.moveIcon1.setTexture(`emptyIcon`);
-                    gameState.moveIcon2.setTexture(`emptyIcon`);
-                    gameState.moveIcon3.setTexture(`emptyIcon`);
-                }
-                if(move.type === "enemy"){
-                    gameState.attacking = true;
-                }
-            }
-        });
+        
     },
     
     slotsCoord: {
@@ -182,12 +174,13 @@ let gameState = {
             sprite: 'slash',
             description: "Basic sword attack",
             type: 'enemy',
+            countdown: 0,
             damage:{
                 high: 8,
-                low: 5
+                low: 6
             },
             action: function(scene,user,target){
-                var rand = (Math.ceil(Math.random()*(gameState.moves.bash.damage.high-gameState.moves.bash.damage.low))+gameState.moves.bash.damage.low)-target.defense;
+                var rand = (Math.ceil(Math.random()*(gameState.moves.slash.damage.high-gameState.moves.slash.damage.low))+gameState.moves.slash.damage.low)-target.defense+user.attackBoost;
                 if(rand < 0){
                     rand = 0;
                 }
@@ -199,8 +192,19 @@ let gameState = {
             sprite: 'harden',
             description: "Increases Defense",
             type: 'self',
+            countdown: 0,
             action: function(scene,user,target){
                 user.defense += 1;
+            }
+        },
+        sharpen:{
+            name: "Sharpen",
+            sprite: 'sharpen',
+            description: "Increases Defense",
+            type: 'self',
+            countdown: 0,
+            action: function(scene,user,target){
+                user.attackBoost += 1;
             }
         },
         heal:{
@@ -208,6 +212,7 @@ let gameState = {
             sprite: 'heal',
             description: "Heals hero or an ally",
             type: 'ally',
+            countdown: 0,
             action: function(scene,user,target){
                 target.health += 10;
             }
@@ -217,29 +222,115 @@ let gameState = {
             sprite: 'bash',
             description: "Basic smash attack",
             type: 'enemy',
+            countdown: 0,
             damage:{
                 high: 9,
-                low: 3
+                low: 4
             },
             action: function(scene,user,target){
-                var rand = (Math.ceil(Math.random()*(gameState.moves.bash.damage.high-gameState.moves.bash.damage.low))+gameState.moves.bash.damage.low)-target.defense;
+                var rand = (Math.ceil(Math.random()*(gameState.moves.bash.damage.high-gameState.moves.bash.damage.low))+gameState.moves.bash.damage.low)-target.defense+user.attackBoost;
                 if(rand < 0){
                     rand = 0;
                 }
                 target.health -= rand;
             }
-        }
+        },
+        revive:{
+            name: "Revive",
+            sprite: 'revive',
+            description: "Revives a fallen ally",
+            type: 'ally',
+            countdown: 5,
+            action: function(scene,user,target){
+                if(user != target && target.health <= 0){
+                    target.health = target.maxHp/2;
+                    gameState.createHealthBar(scene,target,target.maxHp);
+                    target.anims.play(`${target.sprite}Idle`);
+                }
+            }
+        },
+        drain:{
+            name: "Drain",
+            sprite: 'drain',
+            description: "Steals enemy's health",
+            type: 'enemy',
+            countdown: 0,
+            damage:{
+                high: 6,
+                low: 5
+            },
+            action: function(scene,user,target){
+                var rand = (Math.ceil(Math.random()*(gameState.moves.drain.damage.high-gameState.moves.drain.damage.low))+gameState.moves.drain.damage.low)-target.defense;
+                if(rand < 0){
+                    rand = 0;
+                }
+                target.health -= rand;
+                user.health += Math.ceil(rand*1.5);
+            }
+        },
+        magicRay:{
+            name: "Magic Ray",
+            sprite: 'magicRay',
+            description: "Heavy damage attack that ignores defense points",
+            type: 'enemy',
+            countdown: 4,
+            damage:{
+                high: 45,
+                low: 35
+            },
+            action: function(scene,user,target){
+                var rand = (Math.ceil(Math.random()*(gameState.moves.magicRay.damage.high-gameState.moves.magicRay.damage.low))+gameState.moves.magicRay.damage.low)+user.attackBoost;
+                if(rand < 0){
+                    rand = 0;
+                }
+                target.health -= rand;
+            }
+        },
+        selfDestruct:{
+            name: "self Destruct",
+            sprite: 'selfDestruct',
+            description: "Kills the user but deals heavy damage to a single enemy",
+            type: 'enemy',
+            countdown: 10,
+            damage:{
+                high: 100,
+                low: 85
+            },
+            action: function(scene,user,target){
+                user.health = 0;
+                var rand = (Math.ceil(Math.random()*(gameState.moves.selfDestruct.damage.high-gameState.moves.selfDestruct.damage.low))+gameState.moves.selfDestruct.damage.low)-target.defense;
+                if(rand < 0){
+                    rand = 0;
+                }
+                target.health -= rand;
+            }
+        },
     },
     
     soldierStats:{
         sprite: 'soldier',
-        health: 40,
+        health: 50,
         defense: 1,
         level: 1,
         moves:[],
         integrateMoves: function(hero){
             hero.moves.push(gameState.moves.slash);
             hero.moves.push(gameState.moves.harden);
+            hero.moves.push(gameState.moves.sharpen);
+        },
+        computer: function(scene,hero){
+            
+        }
+    },
+    wizardStats:{
+        sprite: 'wizard',
+        health: 35,
+        defense: 0,
+        level: 1,
+        moves:[],
+        integrateMoves: function(hero){
+            hero.moves.push(gameState.moves.magicRay);
+            hero.moves.push(gameState.moves.selfDestruct);
         },
         computer: function(scene,hero){
             
@@ -253,6 +344,8 @@ let gameState = {
         moves:[],
         integrateMoves: function(hero){
             hero.moves.push(gameState.moves.heal);
+            hero.moves.push(gameState.moves.revive);
+            hero.moves.push(gameState.moves.drain);
         },
         computer: function(scene,hero){
             
