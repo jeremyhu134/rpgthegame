@@ -64,7 +64,6 @@ let gameState = {
                     gameState.moveIcon2.setTexture(`emptyIcon`);
                     gameState.moveIcon3.setTexture(`emptyIcon`);
                     gameState.selectedHero = hero;
-                    console.log(gameState.selectedHero.sprite);
                     if(hero.moves[0] && hero.move1Countdown == 0){
                         gameState.moveIcon1.setTexture(`${hero.moves[0].sprite}Icon`);
                     }if(hero.moves[1] && hero.move2Countdown == 0){
@@ -185,6 +184,8 @@ let gameState = {
                     rand = 0;
                 }
                 target.health -= rand;
+                var slash = scene.add.sprite(target.x,target.y,'slashAnimate').setScale(2);
+                slash.anims.play('slashAnimation',true);
             }
         },
         harden:{
@@ -214,7 +215,9 @@ let gameState = {
             type: 'ally',
             countdown: 0,
             action: function(scene,user,target){
-                target.health += 10;
+                target.health += 12;
+                var heal = scene.add.sprite(target.x,target.y,'healAnimate').setScale(2);
+                heal.anims.play('healAnimation',true);
             }
         },
         bash:{
@@ -233,6 +236,28 @@ let gameState = {
                     rand = 0;
                 }
                 target.health -= rand;
+                var bash = scene.add.sprite(target.x,target.y,'bashAnimate').setScale(2);
+                bash.anims.play('bashAnimation',true);
+            }
+        },
+        superBash:{
+            name: "Super Bash",
+            sprite: 'superBash',
+            description: "Basic smash attack",
+            type: 'enemy',
+            countdown: 2,
+            damage:{
+                high: 29,
+                low: 9
+            },
+            action: function(scene,user,target){
+                var rand = (Math.ceil(Math.random()*(gameState.moves.superBash.damage.high-gameState.moves.superBash.damage.low))+gameState.moves.superBash.damage.low)-target.defense+user.attackBoost;
+                if(rand < 0){
+                    rand = 0;
+                }
+                target.health -= rand;
+                var superBash = scene.add.sprite(target.x,target.y,'superBashAnimate').setScale(2);
+                superBash.anims.play('superBashAnimation',true);
             }
         },
         revive:{
@@ -273,9 +298,9 @@ let gameState = {
             sprite: 'magicRay',
             description: "Heavy damage attack that ignores defense points",
             type: 'enemy',
-            countdown: 4,
+            countdown: 3,
             damage:{
-                high: 45,
+                high: 40,
                 low: 35
             },
             action: function(scene,user,target){
@@ -293,8 +318,8 @@ let gameState = {
             type: 'enemy',
             countdown: 10,
             damage:{
-                high: 100,
-                low: 85
+                high: 80,
+                low: 25
             },
             action: function(scene,user,target){
                 user.health = 0;
@@ -367,12 +392,74 @@ let gameState = {
             var found = false;
             while(found == false){
                 rand = Math.ceil(Math.random()*gameState.allies.length)-1;
-                if(gameState.allies[rand]){
+                if(gameState.allies[rand] && gameState.allies[rand].health > 0){
                     found = true;
                 }
             }
             hero.moves[0].action(scene,hero,gameState.allies[rand]);
             hero.moved = 1;
+        }
+    },
+    orcShamanStats:{
+        sprite: 'orcShaman',
+        health: 60,
+        defense: 0,
+        level: 1,
+        moves:[],
+        integrateMoves: function(hero){
+            hero.moves.push(gameState.moves.bash);
+            hero.moves.push(gameState.moves.revive);
+        },
+        computer: function(scene,hero){
+            var rev = 0;
+            var res;
+            for (var i = 0; i < gameState.enemies.length; i++){
+                if (gameState.enemies[i] !== hero && gameState.enemies[i].health <= 0){
+                    rev = 1
+                    res = gameState.enemies[i];
+                }
+            }
+            if(hero.move2Countdown <= 0 && rev == 1){
+                hero.moves[1].action(scene,hero,res);
+            }
+            var rand;
+            var found = false;
+            if(rev !== 1){
+                
+                while(found == false){
+                    rand = Math.ceil(Math.random()*gameState.allies.length)-1;
+                    if(gameState.allies[rand] && gameState.allies[rand].health > 0){
+                        found = true;
+                    }
+                }
+                hero.moves[0].action(scene,hero,gameState.allies[rand]);
+                hero.moved = 1;
+            }
+        }
+    },
+    orcBossStats:{
+        sprite: 'orcBoss',
+        health: 100,
+        defense: 0,
+        level: 1,
+        moves:[],
+        integrateMoves: function(hero){
+            hero.moves.push(gameState.moves.superBash);
+        },
+        computer: function(scene,hero){
+            if(hero.move1Countdown <= 0){
+                var rand;
+                var found = false;
+                while(found == false){
+                    rand = Math.ceil(Math.random()*gameState.allies.length)-1;
+                    if(gameState.allies[rand] && gameState.allies[rand].health > 0){
+                        found = true;
+                    }
+                }
+                hero.moves[0].action(scene,hero,gameState.allies[rand]);
+                hero.moved = 1;
+                hero.move1Countdown = hero.moves[0].countdown;
+            }
         }
     },
     

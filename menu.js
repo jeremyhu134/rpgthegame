@@ -9,18 +9,25 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('reaperwraith','heroimages/reaperwraith.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('soldier','heroimages/soldier.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('orc','heroimages/orc.png',{frameWidth: 100,frameHeight:100});
+        this.load.spritesheet('orcShaman','heroimages/orcShaman.png',{frameWidth: 100,frameHeight:100});
+        this.load.spritesheet('orcBoss','heroimages/orcBoss.png',{frameWidth: 150,frameHeight:150});
         this.load.spritesheet('mage','heroimages/mage.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('wizard','heroimages/wizard.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('endTurn','heroimages/endTurn.png',{frameWidth: 100,frameHeight:50});
         this.load.image('hardenIcon','heroimages/hardenIcon.png');
         this.load.image('slashIcon','heroimages/slashIcon.png');
+        this.load.spritesheet('slashAnimate','heroimages/slashAnimate.png',{frameWidth: 40,frameHeight:40});
         this.load.image('sharpenIcon','heroimages/sharpenIcon.png');
         this.load.image('emptyIcon','heroimages/emptyIcon.png');
         this.load.image('healIcon','heroimages/healIcon.png');
+        this.load.spritesheet('healAnimate','heroimages/healAnimate.png',{frameWidth: 40,frameHeight:40});
         this.load.image('reviveIcon','heroimages/reviveIcon.png');
         this.load.image('drainIcon','heroimages/drainIcon.png');
         this.load.image('magicRayIcon','heroimages/magicRayIcon.png');
         this.load.image('selfDestructIcon','heroimages/selfDestructIcon.png');
+        this.load.image('bashIcon','heroimages/bashIcon.png');
+        this.load.spritesheet('superBashAnimate','heroimages/superBashAnimate.png',{frameWidth: 50,frameHeight:50});
+        this.load.spritesheet('bashAnimate','heroimages/bashAnimate.png',{frameWidth: 50,frameHeight:40});
         
         this.load.spritesheet('background','heroimages/background.png',{frameWidth: 1397,frameHeight:675});
     }
@@ -55,6 +62,55 @@ class MenuScene extends Phaser.Scene {
         var turnButton = this.add.sprite(600,620,'endTurn').setInteractive();
         turnButton.on('pointerdown', function(pointer){
             if(gameState.turn != "enemy"){
+                if(gameState.enemies[0]){
+                    gameState.enemies[0].moved = 0;
+                    gameState.enemies[0].setTint(0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF);
+                    if(gameState.enemies[0].moves[0] && gameState.enemies[0].move1Countdown > 0){
+                        gameState.enemies[0].move1Countdown -= 1;
+                    }
+                    if(gameState.enemies[0].moves[1] && gameState.enemies[0].move2Countdown > 0){
+                        gameState.enemies[0].move2Countdown -= 1;
+                    }
+                    if(gameState.enemies[0].moves[2] && gameState.enemies[0].move3Countdown > 0){
+                        gameState.enemies[0].move3Countdown -= 1;
+                    }
+                }if(gameState.enemies[1]){
+                    gameState.enemies[1].moved = 0;
+                    gameState.enemies[1].setTint(0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF);
+                    if(gameState.enemies[1].moves[0] && gameState.enemies[1].move1Countdown > 0){
+                        gameState.enemies[1].move1Countdown -= 1;
+                    }
+                    if(gameState.enemies[1].moves[1] && gameState.enemies[1].move2Countdown > 0){
+                        gameState.enemies[1].move2Countdown -= 1;
+                    }
+                    if(gameState.enemies[1].moves[2] && gameState.enemies[1].move3Countdown > 0){
+                        gameState.enemies[1].move3Countdown -= 1;
+                    }
+                }if(gameState.enemies[2]){
+                    gameState.enemies[2].moved = 0;
+                    gameState.enemies[2].setTint(0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF);
+                    if(gameState.enemies[2].moves[0] && gameState.enemies[2].move1Countdown > 0){
+                        gameState.enemies[2].move1Countdown -= 1;
+                    }
+                    if(gameState.enemies[2].moves[1] && gameState.enemies[2].move2Countdown > 0){
+                        gameState.enemies[2].move2Countdown -= 1;
+                    }
+                    if(gameState.enemies[2].moves[2] && gameState.enemies[2].move3Countdown > 0){
+                        gameState.enemies[2].move3Countdown -= 1;
+                    }
+                }if(gameState.enemies[3]){
+                    gameState.enemies[3].moved = 0;
+                    gameState.enemies[3].setTint(0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF);
+                    if(gameState.enemies[3].moves[0] && gameState.enemies[3].move1Countdown > 0){
+                        gameState.enemies[3].move1Countdown -= 1;
+                    }
+                    if(gameState.enemies[3].moves[1] && gameState.enemies[3].move2Countdown > 0){
+                        gameState.enemies[3].move2Countdown -= 1;
+                    }
+                    if(gameState.enemies[3].moves[2] && gameState.enemies[3].move3Countdown > 0){
+                        gameState.enemies[3].move3Countdown -= 1;
+                    }
+                }
                 gameState.moveIcon1.setTexture(`emptyIcon`);
                 gameState.moveIcon2.setTexture(`emptyIcon`);
                 gameState.moveIcon3.setTexture(`emptyIcon`);
@@ -194,6 +250,30 @@ class MenuScene extends Phaser.Scene {
             frames:this.anims.generateFrameNames('orc',{start: 4,end: 6})
         });
         this.anims.create({
+            key: 'orcShamanIdle',
+            frameRate: 5,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('orcShaman',{start: 0,end: 3})
+        });
+        this.anims.create({
+            key: 'orcShamanDeath',
+            frameRate: 10,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('orcShaman',{start: 4,end: 6})
+        });
+        this.anims.create({
+            key: 'orcBossIdle',
+            frameRate: 5,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('orcBoss',{start: 0,end: 3})
+        });
+        this.anims.create({
+            key: 'orcBossDeath',
+            frameRate: 10,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('orcBoss',{start: 4,end: 6})
+        });
+        this.anims.create({
             key: 'mageIdle',
             frameRate: 5,
             repeat: -1,
@@ -217,6 +297,35 @@ class MenuScene extends Phaser.Scene {
             repeat: -1,
             frames:this.anims.generateFrameNames('wizard',{start: 4,end: 6})
         });
+        
+        
+        
+        
+        
+        //Animation moves
+        this.anims.create({
+            key: 'slashAnimation',
+            frameRate: 30,
+            frames:this.anims.generateFrameNames('slashAnimate',{start: 0,end: 7})
+        });
+        this.anims.create({
+            key: 'healAnimation',
+            frameRate: 5,
+            frames:this.anims.generateFrameNames('healAnimate',{start: 0,end: 9})
+        });
+        this.anims.create({
+            key: 'bashAnimation',
+            frameRate: 12,
+            frames:this.anims.generateFrameNames('bashAnimate',{start: 0,end: 5})
+        });
+        this.anims.create({
+            key: 'superBashAnimation',
+            frameRate: 10,
+            frames:this.anims.generateFrameNames('superBashAnimate',{start: 0,end: 7})
+        });
+        
+        
+        
         
         
         this.time.addEvent({
@@ -316,9 +425,9 @@ class MenuScene extends Phaser.Scene {
         gameState.createHero(this,gameState.wizardStats,'ally');
         
         gameState.createHero(this,gameState.orcStats,'enemy');
+        gameState.createHero(this,gameState.orcBossStats,'enemy');
         gameState.createHero(this,gameState.orcStats,'enemy');
-        gameState.createHero(this,gameState.orcStats,'enemy');
-        gameState.createHero(this,gameState.orcStats,'enemy');
+        gameState.createHero(this,gameState.orcShamanStats,'enemy');
         
         gameState.createSlots(this);
         
