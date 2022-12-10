@@ -13,7 +13,9 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('orcBoss','heroimages/orcBoss.png',{frameWidth: 150,frameHeight:150});
         this.load.spritesheet('mage','heroimages/mage.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('wizard','heroimages/wizard.png',{frameWidth: 100,frameHeight:100});
+        this.load.spritesheet('troll','heroimages/troll.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('endTurn','heroimages/endTurn.png',{frameWidth: 100,frameHeight:50});
+        this.load.spritesheet('selfDestruct','heroimages/selfDestruct.png',{frameWidth: 32,frameHeight:32});
         this.load.image('hardenIcon','heroimages/hardenIcon.png');
         this.load.image('slashIcon','heroimages/slashIcon.png');
         this.load.spritesheet('slashAnimate','heroimages/slashAnimate.png',{frameWidth: 40,frameHeight:40});
@@ -23,16 +25,102 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('healAnimate','heroimages/healAnimate.png',{frameWidth: 40,frameHeight:40});
         this.load.image('reviveIcon','heroimages/reviveIcon.png');
         this.load.image('drainIcon','heroimages/drainIcon.png');
+        this.load.spritesheet('healthDrain','heroimages/healthDrain.png',{frameWidth: 32,frameHeight:32});
+        this.load.image('slashIcon','heroimages/slashIcon.png');
         this.load.image('magicRayIcon','heroimages/magicRayIcon.png');
+        this.load.image('ray','heroimages/ray.png');
         this.load.image('selfDestructIcon','heroimages/selfDestructIcon.png');
         this.load.image('bashIcon','heroimages/bashIcon.png');
         this.load.spritesheet('superBashAnimate','heroimages/superBashAnimate.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('bashAnimate','heroimages/bashAnimate.png',{frameWidth: 50,frameHeight:40});
         
         this.load.spritesheet('background','heroimages/background.png',{frameWidth: 1397,frameHeight:675});
+        
+        
+        this.load.image('gameTitle','heroimages/gameTitle.png');
+        this.load.image('infoBG','heroimages/infoBG.png');
+        this.load.image('snowBg','heroimages/snowBg.png');
+        this.load.image('spear','heroimages/spear.png');
+        this.load.image('healthImage','heroimages/healthImage.png');
+        this.load.image('newGame','heroimages/newGame.png');
+        this.load.image('continue','heroimages/continue.png');
     }
     
     create() {
+        var scene = this;
+        
+        var bg = this.physics.add.sprite(0,0,'background').setOrigin(0,0).setScale(window.innerHeight/675).setDepth(0);
+        this.anims.create({
+            key: 'bganimate',
+            frameRate: 3,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('background',{start: 0,end: 2})
+        });
+        bg.anims.play('bganimate','true');
+        
+        gameState.loadSave();
+        var title = this.add.image(600,100,'gameTitle').setInteractive();
+        
+        var newGame;
+        var continueb;
+        if(gameState.thingsToSave.level == 1){
+            newGame = this.add.image(900,500,'newGame').setInteractive();
+            newGame.on('pointerdown', function(pointer){
+                gameState.thingsToSave.level = 1;
+                scene.scene.start('GameScene');
+            });
+        }
+        if(gameState.thingsToSave.level > 1){
+            continueb = this.add.image(900,500,'continue').setInteractive();
+            continueb.on('pointerdown', function(pointer){
+                scene.scene.start('GameScene');
+            });
+        }
+        
+    }
+    update() {
+        
+    }
+}
+
+
+
+
+
+
+
+
+
+class SkirmishScene extends Phaser.Scene {
+    constructor() {
+		super({ key: 'SkirmishScene' })
+	}
+    preload(){
+        
+    }
+    create() {
+        
+    }
+    upload() {
+        
+    }
+}
+
+
+
+
+
+
+
+
+class GameScene extends Phaser.Scene {
+    constructor() {
+		super({ key: 'GameScene' })
+	}
+    preload(){
+        
+    }
+    create(){
         var scene = this;
         //anims
         /*this.anims.create({
@@ -49,15 +137,34 @@ class MenuScene extends Phaser.Scene {
         //assigns instances for the keys listed
         gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,THREE,FOUR,FIVE,SIX,SEVEN,EIGHT,ESC');
         
+        this.add.image(0,0,'infoBG').setOrigin(0,0).setScale(1).setDepth(0.1);
         
-        var bg = this.physics.add.sprite(0,0,'background').setOrigin(0,0).setScale(window.innerHeight/675).setDepth(0);
-        this.anims.create({
-            key: 'bganimate',
-            frameRate: 3,
-            repeat: -1,
-            frames:this.anims.generateFrameNames('background',{start: 0,end: 2})
-        });
-        bg.anims.play('bganimate','true');
+        for(var i = 0; i < gameState.allies.length; i++){
+            if(gameState.allies[i]){
+                gameState.allies.splice(i,1);
+            }
+        }
+        for(var i = 0; i < gameState.enemies.length; i++){
+            if(gameState.enemies[i]){
+                gameState.enemies.splice(i,1);
+            }
+        }
+        
+        if(gameState.thingsToSave.level >= 0 && gameState.thingsToSave.level <= 5){
+            var bg = this.physics.add.sprite(0,0,'background').setOrigin(0,0).setScale(window.innerHeight/675).setDepth(0);
+            this.anims.create({
+                key: 'bganimate',
+                frameRate: 3,
+                repeat: -1,
+                frames:this.anims.generateFrameNames('background',{start: 0,end: 2})
+            });
+            bg.anims.play('bganimate','true');
+        }else if(gameState.thingsToSave.level >= 6 && gameState.thingsToSave.level <= 10){
+            var bg = this.physics.add.sprite(0,0,'snowBg').setOrigin(0,0).setScale(1).setDepth(0);
+        }
+        
+        
+        gameState.info.createInfo(this);
         
         var turnButton = this.add.sprite(600,620,'endTurn').setInteractive();
         turnButton.on('pointerdown', function(pointer){
@@ -274,6 +381,18 @@ class MenuScene extends Phaser.Scene {
             frames:this.anims.generateFrameNames('orcBoss',{start: 4,end: 6})
         });
         this.anims.create({
+            key: 'trollIdle',
+            frameRate: 5,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('troll',{start: 0,end: 3})
+        });
+        this.anims.create({
+            key: 'trollDeath',
+            frameRate: 10,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('troll',{start: 4,end: 6})
+        });
+        this.anims.create({
             key: 'mageIdle',
             frameRate: 5,
             repeat: -1,
@@ -323,24 +442,83 @@ class MenuScene extends Phaser.Scene {
             frameRate: 10,
             frames:this.anims.generateFrameNames('superBashAnimate',{start: 0,end: 7})
         });
+        this.anims.create({
+            key: 'orbMove',
+            frameRate: 10,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('selfDestruct',{start: 0,end: 3})
+        });
+        this.anims.create({
+            key: 'orbDestroy',
+            frameRate: 10,
+            frames:this.anims.generateFrameNames('selfDestruct',{start: 4,end: 7})
+        });
+        this.anims.create({
+            key: 'healthDrainMove',
+            frameRate: 10,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('healthDrain',{start: 0,end: 3})
+        });
         
         
         
-        
-        
-        this.time.addEvent({
-            delay: 1,
+        var checkWinorDefeat = this.time.addEvent({
+            delay: 10,
             callback: ()=>{
                 if(gameState.turn == 'player'){
                     turnButton.setFrame(0);
                 }else {
                     turnButton.setFrame(1);
                 }
+                var allyDead = 0;
+                var enemyDead = 0;
+                for(var i = 0; i < gameState.allies.length; i++){
+                    if(gameState.allies[i] && gameState.allies[i].health <= 0){
+                        allyDead++;
+                    }
+                }
+                for(var i = 0; i < gameState.enemies.length; i++){
+                    if(gameState.enemies[i] && gameState.enemies[i].health <= 0){
+                        enemyDead++;
+                    }
+                }
+                if(allyDead == gameState.allies.length || enemyDead == gameState.enemies.length){
+                    gameState.moveIcon1.destroy();
+                    gameState.moveIcon2.destroy();
+                    gameState.moveIcon3.destroy();
+                    turnButton.destroy();
+                }
+                if(allyDead == gameState.allies.length){
+                    checkWinorDefeat.destroy();
+                    this.time.addEvent({
+                        delay: 2500,
+                        callback: ()=>{
+                            this.scene.stop('GameScene');
+                            this.scene.start('MenuScene');
+                        },  
+                        startAt: 0,
+                        timeScale: 1
+                    });
+                }
+                else if(enemyDead == gameState.enemies.length){
+                    checkWinorDefeat.destroy();
+                    gameState.thingsToSave.level++;
+                    this.time.addEvent({
+                        delay: 2500,
+                        callback: ()=>{
+                            this.scene.stop('GameScene');
+                            this.scene.start('MenuScene');
+                        },  
+                        startAt: 0,
+                        timeScale: 1
+                    });
+                }
             },  
             startAt: 0,
             timeScale: 1,
             repeat: -1
         });
+        
         
         
         
@@ -420,14 +598,45 @@ class MenuScene extends Phaser.Scene {
         
         
         
-        gameState.createHero(this,gameState.soldierStats,'ally');
-        gameState.createHero(this,gameState.mageStats,'ally');
-        gameState.createHero(this,gameState.wizardStats,'ally');
-        
-        gameState.createHero(this,gameState.orcStats,'enemy');
-        gameState.createHero(this,gameState.orcBossStats,'enemy');
-        gameState.createHero(this,gameState.orcStats,'enemy');
-        gameState.createHero(this,gameState.orcShamanStats,'enemy');
+        if(gameState.thingsToSave.level == 1){
+            gameState.createHero(this,gameState.soldierStats,'ally');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+        }else if(gameState.thingsToSave.level == 2){
+            gameState.createHero(this,gameState.soldierStats,'ally');
+            gameState.createHero(this,gameState.mageStats,'ally');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+        }else if(gameState.thingsToSave.level == 3){
+            gameState.createHero(this,gameState.soldierStats,'ally');
+            gameState.createHero(this,gameState.mageStats,'ally');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+            gameState.createHero(this,gameState.orcShamanStats,'enemy');
+        }else if(gameState.thingsToSave.level == 4){
+            gameState.createHero(this,gameState.soldierStats,'ally');
+            gameState.createHero(this,gameState.mageStats,'ally');
+            gameState.createHero(this,gameState.wizardStats,'ally');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+            gameState.createHero(this,gameState.orcShamanStats,'enemy');
+            gameState.createHero(this,gameState.orcShamanStats,'enemy');
+        }else if(gameState.thingsToSave.level == 5){
+            gameState.createHero(this,gameState.soldierStats,'ally');
+            gameState.createHero(this,gameState.mageStats,'ally');
+            gameState.createHero(this,gameState.wizardStats,'ally');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+            gameState.createHero(this,gameState.orcBossStats,'enemy');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+            gameState.createHero(this,gameState.orcStats,'enemy');
+        }else if(gameState.thingsToSave.level == 6){
+            gameState.createHero(this,gameState.soldierStats,'ally');
+            gameState.createHero(this,gameState.mageStats,'ally');
+            gameState.createHero(this,gameState.wizardStats,'ally');
+            gameState.createHero(this,gameState.trollStats,'enemy');
+            gameState.createHero(this,gameState.trollStats,'enemy');
+        }
         
         gameState.createSlots(this);
         
@@ -439,51 +648,6 @@ class MenuScene extends Phaser.Scene {
             gameState.Sbutton.setFrame(0);
         });*/
         
-        
-    }
-    update() {
-        
-    }
-}
-
-
-
-
-
-
-
-
-
-class SkirmishScene extends Phaser.Scene {
-    constructor() {
-		super({ key: 'SkirmishScene' })
-	}
-    preload(){
-        
-    }
-    create() {
-        
-    }
-    upload() {
-        
-    }
-}
-
-
-
-
-
-
-
-
-class GameScene extends Phaser.Scene {
-    constructor() {
-		super({ key: 'GameScene' })
-	}
-    preload(){
-        
-    }
-    create(){
         
     }
     update(){

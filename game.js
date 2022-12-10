@@ -14,7 +14,7 @@ const config = {
             //debug: true
         }
     },
-    scene:[MenuScene, SkirmishScene],
+    scene:[MenuScene, SkirmishScene,GameScene],
     scale: {
         zoom: 1
     }
@@ -23,6 +23,11 @@ const config = {
 const game = new Phaser.Game(config);
 let gameState = {
     
+    thingsToSave: {
+        level: 6
+    },
+    
+    
     turn: "player",
     selectedHero: null,
     selectedMove: null,
@@ -30,25 +35,69 @@ let gameState = {
     allies:[],
     enemies:[],
     
+    save: function(){
+        window.localStorage.setItem("thingsToSave", JSON.stringify(gameState.thingsToSave));
+    },
+    //loads variable values from localstorage
+    loadSave: function(){
+        if(JSON.parse(window.localStorage.getItem("thingsToSave")) !== null){
+            gameState.thingsToSave = JSON.parse(window.localStorage.getItem("thingsToSave"));
+        }
+    },
     
     
-    createHero: function(scene,stats,status,ai,aicode){
-        var character = scene.physics.add.sprite(0,0,`${stats.sprite}`).setScale(1).setInteractive();
+    
+    info: {
+        name: null,
+        health: null,
+        createInfo: function(scene){
+            gameState.info.name = scene.add.text(40, 25, ``, {
+                fill: '#ADD8E6', 
+                fontSize: `${50}px`,
+                fontFamily: 'Qahiri',
+                strokeThickness: 5,
+            }).setDepth(1);
+            gameState.info.health = scene.add.text(700, 25, ``, {
+                fill: '#ADD8E6', 
+                fontSize: `${50}px`,
+                fontFamily: 'Qahiri',
+                strokeThickness: 5,
+            }).setDepth(1);
+            scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(gameState.selectedHero !== '' && gameState.selectedHero !== null ){
+                        gameState.info.name.setFill('#ADD8E6');
+                        gameState.info.health.setFill('#ADD8E6');
+                        gameState.info.name.setText(gameState.selectedHero.stats.name);
+                        gameState.info.health.setText(`${gameState.selectedHero.health}/${gameState.selectedHero.maxHp}`);
+                        
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            });
+        }
+    },
+    
+    createHero: function(scene,stats,status){
+        var character = scene.physics.add.sprite(0,0,`${stats.sprite}`).setDepth(0).setScale(1).setInteractive();
         
         character.sprite = stats.sprite;
-        character.health = stats.health;
-        character.defense = stats.defense;
         character.level = stats.level;
+        character.health = Math.ceil(stats.health+((character.level-1)*1.3));
+        character.defense = stats.defense;
         character.moved = 0;
         character.moves = stats.moves.splice();
         character.move1Countdown = 0;
         character.move2Countdown = 0;
         character.move3Countdown = 0;
-        character.maxHp = stats.health;
+        character.maxHp = Math.ceil(stats.health+((character.level-1)*1.3));
         character.stats = stats;
         character.attackBoost = 0;
         function create(hero){
-            gameState.createHealthBar(scene,hero,stats.health);
+            gameState.createHealthBar(scene,hero,hero.maxHp);
             stats.integrateMoves(hero);
             if(status == 'ally'){
                 gameState.allies.push(hero);
@@ -71,6 +120,15 @@ let gameState = {
                     }if(hero.moves[2] && hero.move3Countdown == 0){
                         gameState.moveIcon3.setTexture(`${hero.moves[2].sprite}Icon`);
                     }
+                }else if(status == 'enemy'&& gameState.attacking == false && gameState.turn == 'player' && hero.health > 0){
+                    gameState.selectedHero = '';
+                    gameState.info.name.setFill('#880808');
+                    gameState.info.health.setFill('#880808');
+                    gameState.info.name.setText(hero.stats.name);
+                    gameState.info.health.setText(`${Math.ceil(hero.health)}/${hero.maxHp}`);
+                    gameState.moveIcon1.setTexture(`emptyIcon`);
+                    gameState.moveIcon2.setTexture(`emptyIcon`);
+                    gameState.moveIcon3.setTexture(`emptyIcon`);
                 }else if(status == 'enemy' && gameState.attacking == true && gameState.selectedMove.type == 'enemy' && hero.health > 0){
                     gameState.attacking = false;
                     gameState.selectedMove.action(scene,gameState.selectedHero,hero);
@@ -215,7 +273,7 @@ let gameState = {
             type: 'ally',
             countdown: 0,
             action: function(scene,user,target){
-                target.health += 12;
+                target.health += Math.ceil(12+(1.3*(user.level-1)));
                 var heal = scene.add.sprite(target.x,target.y,'healAnimate').setScale(2);
                 heal.anims.play('healAnimation',true);
             }
@@ -260,6 +318,33 @@ let gameState = {
                 superBash.anims.play('superBashAnimation',true);
             }
         },
+        spearThrow:{
+            name: "Spear Throw",
+            sprite: 'spearThrow',
+            description: "Heavy ranged attack",
+            type: 'enemy',
+            countdown: 0,
+            damage:{
+                high: 13,
+                low: 8
+            },
+            action: function(scene,user,target){
+                var rand = (Math.ceil(Math.random()*(gameState.moves.spearThrow.damage.high-gameState.moves.spearThrow.damage.low))+gameState.moves.spearThrow.damage.low)-target.defense+user.attackBoost;
+                if(rand < 0){
+                    rand = 0;
+                }
+                
+                var spear = scene.physics.add.sprite(user.x - 25, user.y+10,'spear').setDepth(1).setScale(1.5);
+                 gameState.angle=Phaser.Math.Angle.Between(spear.x,spear.y,target.x,target.y);
+                spear.setRotation(gameState.angle); 
+                scene.physics.moveToObject(spear,target,1000);
+
+                scene.physics.add.overlap(spear, target,(spearT, userT)=>{
+                    spearT.destroy();
+                    target.health -= rand;
+                });
+            }
+        },
         revive:{
             name: "Revive",
             sprite: 'revive',
@@ -289,8 +374,25 @@ let gameState = {
                 if(rand < 0){
                     rand = 0;
                 }
-                target.health -= rand;
-                user.health += Math.ceil(rand*1.5);
+                scene.time.addEvent({
+                    delay: 90,
+                    callback: ()=>{
+                        target.health -= rand/10;
+                        var ray = scene.physics.add.sprite(target.x - 25, target.y+10,'healthDrain').setDepth(0.5).setScale(1);
+                         gameState.angle=Phaser.Math.Angle.Between(ray.x,ray.y,user.x,user.y);
+                        ray.anims.play('healthDrainMove');
+                        ray.setRotation(gameState.angle); 
+                        scene.physics.moveToObject(ray,user,400);
+
+                        scene.physics.add.overlap(ray, user,(rayT, userT)=>{
+                            rayT.destroy();
+                            user.health += Math.ceil(rand*1.5/10);
+                        });
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: 10
+                });
             }
         },
         magicRay:{
@@ -308,7 +410,25 @@ let gameState = {
                 if(rand < 0){
                     rand = 0;
                 }
-                target.health -= rand;
+                
+                scene.time.addEvent({
+                    delay: 10,
+                    callback: ()=>{
+
+                        var ray = scene.physics.add.sprite(user.x - 25, user.y+10,'ray').setDepth(0.5).setScale(0.5);
+                         gameState.angle=Phaser.Math.Angle.Between(ray.x,ray.y,target.x,target.y);
+                        ray.setRotation(gameState.angle); 
+                        scene.physics.moveToObject(ray,target,1000);
+
+                        scene.physics.add.overlap(ray, target,(rayT, targetT)=>{
+                            rayT.destroy();
+                            target.health -= rand/100;
+                        });
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: 100
+                });
             }
         },
         selfDestruct:{
@@ -323,16 +443,39 @@ let gameState = {
             },
             action: function(scene,user,target){
                 user.health = 0;
+                var hit = 0;
                 var rand = (Math.ceil(Math.random()*(gameState.moves.selfDestruct.damage.high-gameState.moves.selfDestruct.damage.low))+gameState.moves.selfDestruct.damage.low)-target.defense;
                 if(rand < 0){
                     rand = 0;
                 }
-                target.health -= rand;
+                var ray = scene.physics.add.sprite(user.x - 25, user.y+10,'selfDestruct').setDepth(0.5).setScale(1.5);
+                 gameState.angle=Phaser.Math.Angle.Between(ray.x,ray.y,target.x,target.y);
+                ray.setRotation(gameState.angle); 
+                scene.physics.moveToObject(ray,target,600);
+                ray.anims.play('orbMove',true);
+                scene.physics.add.overlap(ray, target,(rayT, targetT)=>{
+                    if(hit == 0){
+                        rayT.anims.play('orbDestroy',true);
+                        rayT.body.velocity.x = 0;
+                        rayT.body.velocity.y = 0;
+                        target.health -= rand;
+                        scene.time.addEvent({
+                            delay: 500,
+                            callback: ()=>{
+                                rayT.destroy();
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        });
+                        hit = 1;
+                    }
+                });
             }
         },
     },
     
     soldierStats:{
+        name: 'Soldier',
         sprite: 'soldier',
         health: 50,
         defense: 1,
@@ -348,6 +491,7 @@ let gameState = {
         }
     },
     wizardStats:{
+        name: 'Wizard',
         sprite: 'wizard',
         health: 35,
         defense: 0,
@@ -362,6 +506,7 @@ let gameState = {
         }
     },
     mageStats:{
+        name: 'Mage',
         sprite: 'mage',
         health: 30,
         defense: 2,
@@ -379,6 +524,7 @@ let gameState = {
     
     
     orcStats:{
+        name: 'Orc',
         sprite: 'orc',
         health: 35,
         defense: 0,
@@ -401,6 +547,7 @@ let gameState = {
         }
     },
     orcShamanStats:{
+        name: 'Orc Shaman',
         sprite: 'orcShaman',
         health: 60,
         defense: 0,
@@ -438,6 +585,7 @@ let gameState = {
         }
     },
     orcBossStats:{
+        name: 'Gulak the Orc General',
         sprite: 'orcBoss',
         health: 100,
         defense: 0,
@@ -460,6 +608,29 @@ let gameState = {
                 hero.moved = 1;
                 hero.move1Countdown = hero.moves[0].countdown;
             }
+        }
+    },
+    trollStats:{
+        name: 'Troll',
+        sprite: 'troll',
+        health: 40,
+        defense: 3,
+        level: 1,
+        moves:[],
+        integrateMoves: function(hero){
+            hero.moves.push(gameState.moves.spearThrow);
+        },
+        computer: function(scene,hero){
+            var rand;
+            var found = false;
+            while(found == false){
+                rand = Math.ceil(Math.random()*gameState.allies.length)-1;
+                if(gameState.allies[rand] && gameState.allies[rand].health > 0){
+                    found = true;
+                }
+            }
+            hero.moves[0].action(scene,hero,gameState.allies[rand]);
+            hero.moved = 1;
         }
     },
     
@@ -490,129 +661,5 @@ let gameState = {
             timeScale: 1,
             repeat: -1
         });
-    },
-    
-    
-    
-    
-    heroControls: function(scene){
-        gameState.hero.body.checkWorldBounds();
-
-        if(gameState.keys.D.isDown && gameState.keys.W.isDown){
-            gameState.hero.setVelocityX(100);
-            gameState.hero.setVelocityY(-100);
-            gameState.hero.flipX = false;
-        }
-        else if(gameState.keys.A.isDown && gameState.keys.W.isDown){
-            gameState.hero.setVelocityX(-100);
-            gameState.hero.setVelocityY(-100);
-            gameState.hero.flipX = true;
-        }
-        else if(gameState.keys.W.isDown){
-            gameState.hero.setVelocityX(0);
-            gameState.hero.setVelocityY(-100);
-        }
-        else if(gameState.keys.A.isDown){
-            gameState.hero.setVelocityX(-100);
-            gameState.hero.flipX = true;
-        }
-        else if(gameState.keys.D.isDown){
-            gameState.hero.flipX = false;
-            gameState.hero.setVelocityX(100);
-        }
-        else {
-            gameState.hero.setVelocityX(0);
-        }
-        
-        
-        
-        if(!gameState.keys.SPACE.isDown && !gameState.keys.W.isDown && !gameState.keys.A.isDown && !gameState.keys.D.isDown){
-            gameState.hero.anims.play(`marineIdle`,true);
-        }else if(gameState.keys.W.isDown && gameState.keys.A.isDown && gameState.keys.SPACE.isDown || gameState.keys.W.isDown && gameState.keys.D.isDown && gameState.keys.SPACE.isDown){
-            gameState.hero.anims.play(`marineWalkShoot`,true);
-        }else if(gameState.keys.W.isDown && gameState.keys.SPACE.isDown){
-            gameState.hero.anims.play(`marineFlyShoot`,true);
-        }else if(gameState.keys.SPACE.isDown){
-            gameState.hero.anims.play(`marineShoot`,true);
-        }else if(gameState.keys.W.isDown){
-            gameState.hero.anims.play(`marineFly`,true);
-        }else if(gameState.keys.A.isDown || gameState.keys.D.isDown){
-            gameState.hero.anims.play(`marineWalk`,true);
-        }
-    },
-    
-    archer: {
-        sprite: 'archerdefault',
-        health: 150,
-        damage: 20,
-        speed: 150,
-        ammo: -1,//infinite
-        realoadspeed: 1550,
-        attackspeed : 1000,
-        primaryAbilityCooldown : 15000,
-        secondaryAbilityCooldown : 6000,
-        runBehavior: function (scene){
-            
-            var bLoop = scene.time.addEvent({
-                delay: gameState.soldier76.attackspeed,
-                callback: ()=>{
-                    
-                },  
-                startAt: 0,
-                timeScale: -1
-            });
-        },
-        primaryAttack: function(scene,hero,health,damage,speed,ammo,attackspeed){
-            gameState.readyShoot = false;
-            var selected = gameState.bullets.create(hero.x,hero.y,'soldier76bullet');
-            gameState.angle=Phaser.Math.Angle.Between(selected.x,selected.y,gameState.trueinputx,gameState.trueinputy);
-            selected.setRotation(gameState.angle); 
-            scene.physics.moveTo(selected,gameState.trueinputx, gameState.trueinputy,1000);
-            scene.time.addEvent({
-                delay: gameState.soldier76.attackspeed,
-                callback: ()=>{
-                    gameState.readyShoot = true;
-                },  
-                startAt: 0,
-                timeScale: 1
-            });
-        },
-        primaryAbility : function(scene,hero,health,damage,speed,ammo,primaryAbilityCooldown){
-            gameState.readyShoot1 = false;
-            scene.time.addEvent({
-                delay: 100,
-                callback: ()=>{
-                    if(health > 0){
-                        health += 4;
-                    }
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: 50
-            }); 
-            scene.time.addEvent({
-                delay: gameState.soldier76.primaryAbilityCooldown,
-                callback: ()=>{
-                    gameState.readyShoot1 = true;
-                },  
-                startAt: 0,
-                timeScale: 1
-            });
-        },
-       secondaryAbility : function(scene,hero,health,damage,speed,ammo,secondAbilityCooldown){
-            gameState.readyShoot2 = false;
-            var selected = gameState.bullets.create(hero.x,hero.y,'soldier76rockets');
-            gameState.angle=Phaser.Math.Angle.Between(selected.x,selected.y,gameState.trueinputx,gameState.trueinputy);
-            selected.setRotation(gameState.angle); 
-            scene.physics.moveTo(selected,gameState.trueinputx, gameState.trueinputy,600);
-            scene.time.addEvent({
-                delay: gameState.soldier76.secondaryAbilityCooldown,
-                callback: ()=>{
-                    gameState.readyShoot2 = true;
-                },  
-                startAt: 0,
-                timeScale: 1
-            });
-        },
     },
 }
