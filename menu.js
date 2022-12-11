@@ -41,6 +41,10 @@ class MenuScene extends Phaser.Scene {
         this.load.image('infoBG','heroimages/infoBG.png');
         this.load.image('snowBg','heroimages/snowBg.png');
         this.load.image('spear','heroimages/spear.png');
+        this.load.spritesheet('defenseUp','heroimages/defenseUp.png',{frameWidth: 80,frameHeight:80});
+        this.load.spritesheet('attackUp','heroimages/attackUp.png',{frameWidth: 80,frameHeight:80});
+        this.load.spritesheet('reviveAnim','heroimages/reviveAnim.png',{frameWidth: 32,frameHeight:32});
+        this.load.spritesheet('target','heroimages/target.png',{frameWidth: 40,frameHeight:40});
         this.load.image('healthImage','heroimages/healthImage.png');
         this.load.image('newGame','heroimages/newGame.png');
         this.load.image('continue','heroimages/continue.png');
@@ -139,7 +143,7 @@ class GameScene extends Phaser.Scene {
         
         this.add.image(0,0,'infoBG').setOrigin(0,0).setScale(1).setDepth(0.1);
         
-        for(var i = 0; i < gameState.allies.length; i++){
+        /*for(var i = 0; i < gameState.allies.length; i++){
             if(gameState.allies[i]){
                 gameState.allies.splice(i,1);
             }
@@ -148,7 +152,10 @@ class GameScene extends Phaser.Scene {
             if(gameState.enemies[i]){
                 gameState.enemies.splice(i,1);
             }
-        }
+        }*/
+        gameState.enemies = [];
+        gameState.allies = [];
+        
         
         if(gameState.thingsToSave.level >= 0 && gameState.thingsToSave.level <= 5){
             var bg = this.physics.add.sprite(0,0,'background').setOrigin(0,0).setScale(window.innerHeight/675).setDepth(0);
@@ -162,6 +169,76 @@ class GameScene extends Phaser.Scene {
         }else if(gameState.thingsToSave.level >= 6 && gameState.thingsToSave.level <= 10){
             var bg = this.physics.add.sprite(0,0,'snowBg').setOrigin(0,0).setScale(1).setDepth(0);
         }
+        
+        
+        this.time.addEvent({
+            delay: 10,
+            callback: ()=>{
+                if(gameState.selectedMove !== ''){
+                    if(gameState.selectedMove.type == 'ally'){
+                        if(gameState.allies[0]){
+                            gameState.target1.setFrame(1);
+                        }if(gameState.allies[1]){
+                            gameState.target2.setFrame(1);
+                        }if(gameState.allies[2]){
+                            gameState.target3.setFrame(1);
+                        }if(gameState.allies[3]){
+                            gameState.target4.setFrame(1);
+                        }
+                        if(gameState.enemies[0]){
+                            gameState.target5.setFrame(0);
+                        }if(gameState.enemies[1]){
+                            gameState.target6.setFrame(0);
+                        }if(gameState.enemies[2]){
+                            gameState.target7.setFrame(0);
+                        }if(gameState.enemies[3]){
+                            gameState.target8.setFrame(0);
+                        }
+                    }else if(gameState.selectedMove.type == 'enemy'){
+                        if(gameState.enemies[0]){
+                            gameState.target5.setFrame(2);
+                        }if(gameState.enemies[1]){
+                            gameState.target6.setFrame(2);
+                        }if(gameState.enemies[2]){
+                            gameState.target7.setFrame(2);
+                        }if(gameState.enemies[3]){
+                            gameState.target8.setFrame(2);
+                        }
+                        if(gameState.allies[0]){
+                            gameState.target1.setFrame(0);
+                        }if(gameState.allies[1]){
+                            gameState.target2.setFrame(0);
+                        }if(gameState.allies[2]){
+                            gameState.target3.setFrame(0);
+                        }if(gameState.allies[3]){
+                            gameState.target4.setFrame(0);
+                        }
+                    }
+                }else {
+                    if(gameState.allies[0]){
+                        gameState.target1.setFrame(0);
+                    }if(gameState.allies[1]){
+                        gameState.target2.setFrame(0);
+                    }if(gameState.allies[2]){
+                        gameState.target3.setFrame(0);
+                    }if(gameState.allies[3]){
+                        gameState.target4.setFrame(0);
+                    }
+                    if(gameState.enemies[0]){
+                        gameState.target5.setFrame(0);
+                    }if(gameState.enemies[1]){
+                        gameState.target6.setFrame(0);
+                    }if(gameState.enemies[2]){
+                        gameState.target7.setFrame(0);
+                    }if(gameState.enemies[3]){
+                        gameState.target8.setFrame(0);
+                    }
+                }
+            },  
+            startAt: 0,
+            timeScale: 1,
+            repeat: -1
+        });
         
         
         gameState.info.createInfo(this);
@@ -459,6 +536,23 @@ class GameScene extends Phaser.Scene {
             repeat: -1,
             frames:this.anims.generateFrameNames('healthDrain',{start: 0,end: 3})
         });
+        this.anims.create({
+            key: 'defenseUpAnim',
+            frameRate: 15,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('defenseUp',{start: 0,end: 3})
+        });
+        this.anims.create({
+            key: 'attackUpAnim',
+            frameRate: 15,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('attackUp',{start: 0,end: 3})
+        });
+        this.anims.create({
+            key: 'reviveAnimation',
+            frameRate: 12,
+            frames:this.anims.generateFrameNames('reviveAnim',{start: 0,end: 12})
+        });
         
         
         
@@ -503,6 +597,7 @@ class GameScene extends Phaser.Scene {
                 else if(enemyDead == gameState.enemies.length){
                     checkWinorDefeat.destroy();
                     gameState.thingsToSave.level++;
+                    gameState.save();
                     this.time.addEvent({
                         delay: 2500,
                         callback: ()=>{

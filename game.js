@@ -129,6 +129,7 @@ let gameState = {
                     gameState.moveIcon1.setTexture(`emptyIcon`);
                     gameState.moveIcon2.setTexture(`emptyIcon`);
                     gameState.moveIcon3.setTexture(`emptyIcon`);
+                    gameState.selectedMove = '';
                 }else if(status == 'enemy' && gameState.attacking == true && gameState.selectedMove.type == 'enemy' && hero.health > 0){
                     gameState.attacking = false;
                     gameState.selectedMove.action(scene,gameState.selectedHero,hero);
@@ -137,6 +138,7 @@ let gameState = {
                     gameState.moveIcon1.setTexture(`emptyIcon`);
                     gameState.moveIcon2.setTexture(`emptyIcon`);
                     gameState.moveIcon3.setTexture(`emptyIcon`);
+                    gameState.selectedMove = '';
                 }else if(status == 'ally' && gameState.attacking == true && gameState.selectedMove.type == 'ally'){
                     gameState.selectedMove.action(scene,gameState.selectedHero,hero);
                     gameState.attacking = false;
@@ -145,15 +147,14 @@ let gameState = {
                     gameState.moveIcon1.setTexture(`emptyIcon`);
                     gameState.moveIcon2.setTexture(`emptyIcon`);
                     gameState.moveIcon3.setTexture(`emptyIcon`);
+                    gameState.selectedMove = '';
                 }
             });
         }
         create(character);
     },
     
-    createMove: function(scene,move,icon,hero){
-        
-    },
+    selectedMove: '',
     
     slotsCoord: {
         ally:{
@@ -197,31 +198,39 @@ let gameState = {
         if(gameState.allies[0]){
             gameState.allies[0].x = gameState.slotsCoord.ally.slot1.x;
             gameState.allies[0].y = gameState.slotsCoord.ally.slot1.y;
+            gameState.target1 = scene.add.sprite(gameState.slotsCoord.ally.slot1.x,gameState.slotsCoord.ally.slot1.y,'target').setScale(2);
         }if(gameState.allies[1]){
             gameState.allies[1].x = gameState.slotsCoord.ally.slot2.x;
             gameState.allies[1].y = gameState.slotsCoord.ally.slot2.y;
+            gameState.target2 = scene.add.sprite(gameState.slotsCoord.ally.slot2.x,gameState.slotsCoord.ally.slot2.y,'target').setScale(2);
         }if(gameState.allies[2]){
             gameState.allies[2].x = gameState.slotsCoord.ally.slot3.x;
             gameState.allies[2].y = gameState.slotsCoord.ally.slot3.y;
+            gameState.target3 = scene.add.sprite(gameState.slotsCoord.ally.slot3.x,gameState.slotsCoord.ally.slot3.y,'target').setScale(2);
         }if(gameState.allies[3]){
             gameState.allies[3].x = gameState.slotsCoord.ally.slot4.x;
             gameState.allies[3].y = gameState.slotsCoord.ally.slot4.y;
+            gameState.target4 = scene.add.sprite(gameState.slotsCoord.ally.slot4.x,gameState.slotsCoord.ally.slot4.y,'target').setScale(2);
         }if(gameState.enemies[0]){
             gameState.enemies[0].flipX = true;
             gameState.enemies[0].x = gameState.slotsCoord.enemy.slot1.x;
             gameState.enemies[0].y = gameState.slotsCoord.enemy.slot1.y;
+            gameState.target5 = scene.add.sprite(gameState.slotsCoord.enemy.slot1.x,gameState.slotsCoord.enemy.slot1.y,'target').setScale(2);
         }if(gameState.enemies[1]){
             gameState.enemies[1].flipX = true;
             gameState.enemies[1].x = gameState.slotsCoord.enemy.slot2.x;
             gameState.enemies[1].y = gameState.slotsCoord.enemy.slot2.y;
+            gameState.target6 = scene.add.sprite(gameState.slotsCoord.enemy.slot2.x,gameState.slotsCoord.enemy.slot2.y,'target').setScale(2);
         }if(gameState.enemies[2]){
             gameState.enemies[2].flipX = true;
             gameState.enemies[2].x = gameState.slotsCoord.enemy.slot3.x;
             gameState.enemies[2].y = gameState.slotsCoord.enemy.slot3.y;
+            gameState.target7 = scene.add.sprite(gameState.slotsCoord.enemy.slot3.x,gameState.slotsCoord.enemy.slot3.y,'target').setScale(2);
         }if(gameState.enemies[3]){
             gameState.enemies[3].flipX = true;
             gameState.enemies[3].x = gameState.slotsCoord.enemy.slot4.x;
             gameState.enemies[3].y = gameState.slotsCoord.enemy.slot4.y;
+            gameState.target8 = scene.add.sprite(gameState.slotsCoord.enemy.slot4.x,gameState.slotsCoord.enemy.slot4.y,'target').setScale(2);
         }
     },
     
@@ -233,7 +242,7 @@ let gameState = {
             type: 'enemy',
             countdown: 0,
             damage:{
-                high: 8,
+                high: 9,
                 low: 6
             },
             action: function(scene,user,target){
@@ -254,6 +263,16 @@ let gameState = {
             countdown: 0,
             action: function(scene,user,target){
                 user.defense += 1;
+                var def = scene.add.sprite(user.x+50,user.y-40,'defenseUp').setScale(0.8);
+                def.anims.play('defenseUpAnim',true);
+                scene.time.addEvent({
+                    delay: 2000,
+                    callback: ()=>{
+                        def.destroy();
+                    },  
+                    startAt: 0,
+                    timeScale: 1
+                });
             }
         },
         sharpen:{
@@ -264,6 +283,16 @@ let gameState = {
             countdown: 0,
             action: function(scene,user,target){
                 user.attackBoost += 1;
+                var attck = scene.add.sprite(user.x+50,user.y-40,'attackUp').setScale(0.8);
+                attck.anims.play('attackUpAnim',true);
+                scene.time.addEvent({
+                    delay: 2000,
+                    callback: ()=>{
+                        attck.destroy();
+                    },  
+                    startAt: 0,
+                    timeScale: 1
+                });
             }
         },
         heal:{
@@ -356,6 +385,8 @@ let gameState = {
                     target.health = target.maxHp/2;
                     gameState.createHealthBar(scene,target,target.maxHp);
                     target.anims.play(`${target.sprite}Idle`);
+                    var rev = scene.add.sprite(Math.ceil(target.x),Math.ceil(target.y),'reviveAnim').setDepth(1).setScale(target.body.height/32);
+                    rev.anims.play('reviveAnimation',true);
                 }
             }
         },
@@ -477,7 +508,7 @@ let gameState = {
     soldierStats:{
         name: 'Soldier',
         sprite: 'soldier',
-        health: 50,
+        health: 40,
         defense: 1,
         level: 1,
         moves:[],
