@@ -16,6 +16,7 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('troll','heroimages/troll.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('endTurn','heroimages/endTurn.png',{frameWidth: 100,frameHeight:50});
         this.load.spritesheet('selfDestruct','heroimages/selfDestruct.png',{frameWidth: 32,frameHeight:32});
+        this.load.spritesheet('THEWORLD','heroimages/THEWORLD.png',{frameWidth: 234,frameHeight:300});
         this.load.image('hardenIcon','heroimages/hardenIcon.png');
         this.load.image('slashIcon','heroimages/slashIcon.png');
         this.load.spritesheet('slashAnimate','heroimages/slashAnimate.png',{frameWidth: 40,frameHeight:40});
@@ -39,12 +40,14 @@ class MenuScene extends Phaser.Scene {
         
         this.load.image('gameTitle','heroimages/gameTitle.png');
         this.load.image('infoBG','heroimages/infoBG.png');
+        this.load.image('jojoBG','heroimages/jojoBG.png');
         this.load.image('snowBg','heroimages/snowBg.png');
         this.load.image('spear','heroimages/spear.png');
         this.load.spritesheet('defenseUp','heroimages/defenseUp.png',{frameWidth: 80,frameHeight:80});
         this.load.spritesheet('attackUp','heroimages/attackUp.png',{frameWidth: 80,frameHeight:80});
         this.load.spritesheet('reviveAnim','heroimages/reviveAnim.png',{frameWidth: 32,frameHeight:32});
         this.load.spritesheet('target','heroimages/target.png',{frameWidth: 40,frameHeight:40});
+        this.load.spritesheet('mudaAnim','heroimages/mudaAnim.png',{frameWidth: 100,frameHeight:100});
         this.load.image('healthImage','heroimages/healthImage.png');
         this.load.image('newGame','heroimages/newGame.png');
         this.load.image('continue','heroimages/continue.png');
@@ -166,8 +169,11 @@ class GameScene extends Phaser.Scene {
                 frames:this.anims.generateFrameNames('background',{start: 0,end: 2})
             });
             bg.anims.play('bganimate','true');
-        }else if(gameState.thingsToSave.level >= 6 && gameState.thingsToSave.level <= 10){
+        }else if(gameState.thingsToSave.level >= 6 && gameState.thingsToSave.level <= 6){
             var bg = this.physics.add.sprite(0,0,'snowBg').setOrigin(0,0).setScale(1).setDepth(0);
+        }
+        else if(gameState.thingsToSave.level >= 7 && gameState.thingsToSave.level <= 7){
+            var bg = this.physics.add.sprite(0,0,'jojoBG').setOrigin(0,0).setScale(1).setDepth(0);
         }
         
         
@@ -494,6 +500,17 @@ class GameScene extends Phaser.Scene {
             frames:this.anims.generateFrameNames('wizard',{start: 4,end: 6})
         });
         
+        this.anims.create({
+            key: 'THEWORLDIdle',
+            frameRate: 5,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('THEWORLD',{start: 0,end: 3})
+        });
+        this.anims.create({
+            key: 'THEWORLDDeath',
+            frameRate: 10,
+            frames:this.anims.generateFrameNames('THEWORLD',{start: 4,end: 10})
+        });
         
         
         
@@ -552,6 +569,12 @@ class GameScene extends Phaser.Scene {
             key: 'reviveAnimation',
             frameRate: 12,
             frames:this.anims.generateFrameNames('reviveAnim',{start: 0,end: 12})
+        });
+        this.anims.create({
+            key: 'mudaAnimation',
+            frameRate: 20,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('mudaAnim',{start: 0,end: 4})
         });
         
         
@@ -731,6 +754,14 @@ class GameScene extends Phaser.Scene {
             gameState.createHero(this,gameState.wizardStats,'ally');
             gameState.createHero(this,gameState.trollStats,'enemy');
             gameState.createHero(this,gameState.trollStats,'enemy');
+        }
+        else if(gameState.thingsToSave.level >= 7){
+            gameState.createHero(this,gameState.soldierStats,'ally');
+            gameState.createHero(this,gameState.mageStats,'ally');
+            gameState.createHero(this,gameState.wizardStats,'ally');
+            gameState.createHero(this,gameState.mageStats,'ally');
+            gameState.enemies[0] = null;
+            gameState.createHero(this,gameState.theWorldStats,'enemy');
         }
         
         gameState.createSlots(this);

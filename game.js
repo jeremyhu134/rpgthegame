@@ -24,7 +24,7 @@ const game = new Phaser.Game(config);
 let gameState = {
     
     thingsToSave: {
-        level: 1
+        level: 7
     },
     
     
@@ -70,7 +70,7 @@ let gameState = {
                         gameState.info.name.setFill('#ADD8E6');
                         gameState.info.health.setFill('#ADD8E6');
                         gameState.info.name.setText(gameState.selectedHero.stats.name);
-                        gameState.info.health.setText(`${gameState.selectedHero.health}/${gameState.selectedHero.maxHp}`);
+                        gameState.info.health.setText(`${Math.ceil(gameState.selectedHero.health)}/${gameState.selectedHero.maxHp}`);
                         
                     }
                 },  
@@ -503,7 +503,56 @@ let gameState = {
                 });
             }
         },
+        muda:{
+            name: "Futile Punches",
+            sprite: 'muda',
+            description: "MUDA MUDA MUDA MUDAAAAAAAAAAA!!!",
+            type: 'enemy',
+            countdown: 0,
+            damage:{
+                high: 50,
+                low: 20
+            },
+            action: function(scene,user,target){
+                var rand = (Math.ceil(Math.random()*(gameState.moves.muda.damage.high-gameState.moves.muda.damage.low))+gameState.moves.muda.damage.low);
+                if(rand < 0){
+                    rand = 0;
+                }
+
+                var muda = scene.add.sprite(target.x,target.y,'mudaAnim').setScale(1);
+                muda.anims.play('mudaAnimation',true);
+                scene.time.addEvent({
+                    delay: 25,
+                    callback: ()=>{
+                        target.health -= rand/100;
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: 100
+                });
+                scene.time.addEvent({
+                    delay: 2500,
+                    callback: ()=>{
+                        muda.destroy();
+                    },  
+                    startAt: 0,
+                    timeScale: 1
+                });
+            }
+        }
     },
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     soldierStats:{
         name: 'Soldier',
@@ -650,6 +699,31 @@ let gameState = {
         moves:[],
         integrateMoves: function(hero){
             hero.moves.push(gameState.moves.spearThrow);
+        },
+        computer: function(scene,hero){
+            var rand;
+            var found = false;
+            while(found == false){
+                rand = Math.ceil(Math.random()*gameState.allies.length)-1;
+                if(gameState.allies[rand] && gameState.allies[rand].health > 0){
+                    found = true;
+                }
+            }
+            hero.moves[0].action(scene,hero,gameState.allies[rand]);
+            hero.moved = 1;
+        }
+    },
+    
+    
+    theWorldStats:{
+        name: 'The World',
+        sprite: 'THEWORLD',
+        health: 200,
+        defense: 0,
+        level: 1,
+        moves:[],
+        integrateMoves: function(hero){
+            hero.moves.push(gameState.moves.muda);
         },
         computer: function(scene,hero){
             var rand;
