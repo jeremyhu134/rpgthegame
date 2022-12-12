@@ -648,11 +648,12 @@ let gameState = {
             }
             if(hero.move2Countdown <= 0 && rev == 1){
                 hero.moves[1].action(scene,hero,res);
+            }else{
+                hero.move2Countdown --;
             }
             var rand;
             var found = false;
             if(rev !== 1){
-                
                 while(found == false){
                     rand = Math.ceil(Math.random()*gameState.allies.length)-1;
                     if(gameState.allies[rand] && gameState.allies[rand].health > 0){
@@ -661,6 +662,7 @@ let gameState = {
                 }
                 hero.moves[0].action(scene,hero,gameState.allies[rand]);
                 hero.moved = 1;
+                hero.move2Countdown = gameState.moves.revive.countdown;
             }
         }
     },
