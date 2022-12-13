@@ -8,6 +8,7 @@ class MenuScene extends Phaser.Scene {
         this.load.image('testmap','heroimages/mapbg.png');
         this.load.spritesheet('reaperwraith','heroimages/reaperwraith.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('soldier','heroimages/soldier.png',{frameWidth: 100,frameHeight:100});
+        this.load.spritesheet('archer','heroimages/archer.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('orc','heroimages/orc.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('orcShaman','heroimages/orcShaman.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('orcBoss','heroimages/orcBoss.png',{frameWidth: 150,frameHeight:150});
@@ -31,11 +32,14 @@ class MenuScene extends Phaser.Scene {
         this.load.image('magicRayIcon','heroimages/magicRayIcon.png');
         this.load.image('ray','heroimages/ray.png');
         this.load.image('selfDestructIcon','heroimages/selfDestructIcon.png');
+        this.load.image('plasmaShowerIcon','heroimages/plasmaShowerIcon.png');
         this.load.image('bashIcon','heroimages/bashIcon.png');
+        this.load.image('arrowShotIcon','heroimages/arrowShotIcon.png');
         this.load.spritesheet('superBashAnimate','heroimages/superBashAnimate.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('bashAnimate','heroimages/bashAnimate.png',{frameWidth: 50,frameHeight:40});
         
         this.load.spritesheet('background','heroimages/background.png',{frameWidth: 1397,frameHeight:675});
+        
         
         
         this.load.image('gameTitle','heroimages/gameTitle.png');
@@ -43,11 +47,13 @@ class MenuScene extends Phaser.Scene {
         this.load.image('jojoBG','heroimages/jojoBG.png');
         this.load.image('snowBg','heroimages/snowBg.png');
         this.load.image('spear','heroimages/spear.png');
+        this.load.image('arrow','heroimages/arrow.png');
         this.load.spritesheet('defenseUp','heroimages/defenseUp.png',{frameWidth: 80,frameHeight:80});
         this.load.spritesheet('attackUp','heroimages/attackUp.png',{frameWidth: 80,frameHeight:80});
         this.load.spritesheet('reviveAnim','heroimages/reviveAnim.png',{frameWidth: 32,frameHeight:32});
         this.load.spritesheet('target','heroimages/target.png',{frameWidth: 40,frameHeight:40});
         this.load.spritesheet('mudaAnim','heroimages/mudaAnim.png',{frameWidth: 100,frameHeight:100});
+        this.load.spritesheet('magicBallRain','heroimages/magicBallRain.png',{frameWidth: 50,frameHeight:50});
         this.load.image('healthImage','heroimages/healthImage.png');
         this.load.image('newGame','heroimages/newGame.png');
         this.load.image('continue','heroimages/continue.png');
@@ -499,6 +505,18 @@ class GameScene extends Phaser.Scene {
             repeat: -1,
             frames:this.anims.generateFrameNames('wizard',{start: 4,end: 6})
         });
+        this.anims.create({
+            key: 'archerIdle',
+            frameRate: 5,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('archer',{start: 0,end: 3})
+        });
+        this.anims.create({
+            key: 'archerDeath',
+            frameRate: 10,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('archer',{start: 4,end: 6})
+        });
         
         this.anims.create({
             key: 'THEWORLDIdle',
@@ -576,6 +594,11 @@ class GameScene extends Phaser.Scene {
             repeat: -1,
             frames:this.anims.generateFrameNames('mudaAnim',{start: 0,end: 4})
         });
+        this.anims.create({
+            key: 'MBRAnim',
+            frameRate: 10,
+            frames:this.anims.generateFrameNames('magicBallRain',{start: 0,end: 6})
+        });
         
         
         
@@ -650,7 +673,7 @@ class GameScene extends Phaser.Scene {
         gameState.moveIcon2 = this.add.sprite(600,550,'emptyIcon').setInteractive();
         gameState.moveIcon3 = this.add.sprite(660,550,'emptyIcon').setInteractive();
         gameState.moveIcon1.on('pointerdown', function(pointer){
-            if(gameState.selectedHero.moved == 0){
+            if(gameState.selectedHero.moved == 0 && gameState.selectedHero.moves[0]){
                 gameState.selectedMove = gameState.selectedHero.moves[0];
                 gameState.selectedHero.move1Countdown = gameState.selectedHero.moves[0].countdown;
                 if(gameState.selectedHero.moves[0].type == "self"){
@@ -671,7 +694,7 @@ class GameScene extends Phaser.Scene {
             }
         });
         gameState.moveIcon2.on('pointerdown', function(pointer){
-            if(gameState.selectedHero.moved == 0){
+            if(gameState.selectedHero.moved == 0 && gameState.selectedHero.moves[1]){
                 gameState.selectedMove = gameState.selectedHero.moves[1];
                 gameState.selectedHero.move2Countdown = gameState.selectedHero.moves[1].countdown;
                 if(gameState.selectedHero.moves[1].type == "self"){
@@ -692,7 +715,7 @@ class GameScene extends Phaser.Scene {
             }
         });
         gameState.moveIcon3.on('pointerdown', function(pointer){
-            if(gameState.selectedHero.moved == 0){
+            if(gameState.selectedHero.moved == 0 && gameState.selectedHero.moves[2]){
                 gameState.selectedMove = gameState.selectedHero.moves[2];
                 gameState.selectedHero.move3Countdown = gameState.selectedHero.moves[2].countdown;
                 if(gameState.selectedHero.moves[2].type == "self"){
@@ -735,7 +758,7 @@ class GameScene extends Phaser.Scene {
         }else if(gameState.thingsToSave.level == 4){
             gameState.createHero(this,gameState.soldierStats,'ally');
             gameState.createHero(this,gameState.mageStats,'ally');
-            gameState.createHero(this,gameState.wizardStats,'ally');
+            gameState.createHero(this,gameState.archerStats,'ally');
             gameState.createHero(this,gameState.orcStats,'enemy');
             gameState.createHero(this,gameState.orcStats,'enemy');
             gameState.createHero(this,gameState.orcShamanStats,'enemy');
@@ -743,15 +766,19 @@ class GameScene extends Phaser.Scene {
         }else if(gameState.thingsToSave.level == 5){
             gameState.createHero(this,gameState.soldierStats,'ally');
             gameState.createHero(this,gameState.mageStats,'ally');
+            gameState.createHero(this,gameState.archerStats,'ally');
             gameState.createHero(this,gameState.wizardStats,'ally');
             gameState.createHero(this,gameState.orcStats,'enemy');
             gameState.createHero(this,gameState.orcBossStats,'enemy');
-            gameState.createHero(this,gameState.orcStats,'enemy');
+            gameState.createHero(this,gameState.orcShamanStats,'enemy');
             gameState.createHero(this,gameState.orcStats,'enemy');
         }else if(gameState.thingsToSave.level == 6){
             gameState.createHero(this,gameState.soldierStats,'ally');
             gameState.createHero(this,gameState.mageStats,'ally');
             gameState.createHero(this,gameState.wizardStats,'ally');
+            gameState.createHero(this,gameState.archerStats,'ally');
+            gameState.createHero(this,gameState.trollStats,'enemy');
+            gameState.createHero(this,gameState.trollStats,'enemy');
             gameState.createHero(this,gameState.trollStats,'enemy');
             gameState.createHero(this,gameState.trollStats,'enemy');
         }
@@ -759,7 +786,7 @@ class GameScene extends Phaser.Scene {
             gameState.createHero(this,gameState.soldierStats,'ally');
             gameState.createHero(this,gameState.mageStats,'ally');
             gameState.createHero(this,gameState.wizardStats,'ally');
-            gameState.createHero(this,gameState.mageStats,'ally');
+            gameState.createHero(this,gameState.archerStats,'ally');
             gameState.enemies[0] = null;
             gameState.createHero(this,gameState.theWorldStats,'enemy');
         }

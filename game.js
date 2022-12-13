@@ -374,6 +374,33 @@ let gameState = {
                 });
             }
         },
+        arrowShot:{
+            name: "Dead Eye",
+            sprite: 'arrowShot',
+            description: "single shot attack",
+            type: 'enemy',
+            countdown: 2,
+            damage:{
+                high: 15,
+                low: 10
+            },
+            action: function(scene,user,target){
+                var rand = (Math.ceil(Math.random()*(gameState.moves.arrowShot.damage.high-gameState.moves.arrowShot.damage.low))+gameState.moves.arrowShot.damage.low)-target.defense+user.attackBoost;
+                if(rand < 0){
+                    rand = 0;
+                }
+                
+                var spear = scene.physics.add.sprite(user.x - 25, user.y+10,'arrow').setDepth(1).setScale(1);
+                 gameState.angle=Phaser.Math.Angle.Between(spear.x,spear.y,target.x,target.y);
+                spear.setRotation(gameState.angle); 
+                scene.physics.moveToObject(spear,target,1200);
+
+                scene.physics.add.overlap(spear, target,(spearT, userT)=>{
+                    spearT.destroy();
+                    target.health -= rand;
+                });
+            }
+        },
         revive:{
             name: "Revive",
             sprite: 'revive',
@@ -431,10 +458,10 @@ let gameState = {
             sprite: 'magicRay',
             description: "Heavy damage attack that ignores defense points",
             type: 'enemy',
-            countdown: 3,
+            countdown: 2,
             damage:{
-                high: 40,
-                low: 35
+                high: 30,
+                low: 20
             },
             action: function(scene,user,target){
                 var rand = (Math.ceil(Math.random()*(gameState.moves.magicRay.damage.high-gameState.moves.magicRay.damage.low))+gameState.moves.magicRay.damage.low)+user.attackBoost;
@@ -469,7 +496,7 @@ let gameState = {
             type: 'enemy',
             countdown: 10,
             damage:{
-                high: 80,
+                high: 60,
                 low: 25
             },
             action: function(scene,user,target){
@@ -503,6 +530,35 @@ let gameState = {
                 });
             }
         },
+        plasmaShower:{
+            name: "Plasma Shower",
+            sprite: 'plasmaShower',
+            description: "Splash attack that hits all enemies",
+            type: 'enemy',
+            countdown: 4,
+            damage:{
+                high: 12,
+                low: 8
+            },
+            action: function(scene,user,target){
+                var rand = (Math.ceil(Math.random()*(gameState.moves.plasmaShower.damage.high-gameState.moves.plasmaShower.damage.low))+gameState.moves.plasmaShower.damage.low)+user.attackBoost;
+                if(rand < 0){
+                    rand = 0;
+                }
+                if(gameState.enemies[0]){
+                   gameState.enemies[0].health -= rand; 
+                }if(gameState.enemies[1]){
+                    gameState.enemies[1].health -= rand;
+                }if(gameState.enemies[2]){
+                    gameState.enemies[2].health -= rand;
+                }if(gameState.enemies[3]){
+                    gameState.enemies[3].health -= rand;
+                }
+                
+                var shower = scene.physics.add.sprite(1200-175, 325,'magicBallRain').setDepth(2).setScale(10);
+                shower.anims.play('MBRAnim');
+            }
+        },
         muda:{
             name: "Futile Punches",
             sprite: 'muda',
@@ -510,8 +566,8 @@ let gameState = {
             type: 'enemy',
             countdown: 0,
             damage:{
-                high: 50,
-                low: 20
+                high: 40,
+                low: 25
             },
             action: function(scene,user,target){
                 var rand = (Math.ceil(Math.random()*(gameState.moves.muda.damage.high-gameState.moves.muda.damage.low))+gameState.moves.muda.damage.low);
@@ -580,6 +636,7 @@ let gameState = {
         integrateMoves: function(hero){
             hero.moves.push(gameState.moves.magicRay);
             hero.moves.push(gameState.moves.selfDestruct);
+            hero.moves.push(gameState.moves.plasmaShower);
         },
         computer: function(scene,hero){
             
@@ -601,6 +658,21 @@ let gameState = {
             
         }
     },
+    archerStats:{
+        name: 'Archer',
+        sprite: 'archer',
+        health: 40,
+        defense: 1,
+        level: 1,
+        moves:[],
+        integrateMoves: function(hero){
+            hero.moves.push(gameState.moves.arrowShot);
+        },
+        computer: function(scene,hero){
+            
+        }
+    },
+    
     
     
     orcStats:{
@@ -648,12 +720,12 @@ let gameState = {
             }
             if(hero.move2Countdown <= 0 && rev == 1){
                 hero.moves[1].action(scene,hero,res);
-            }else{
-                hero.move2Countdown --;
+                hero.move2Countdown = hero.moves[1].countdown;
             }
             var rand;
             var found = false;
             if(rev !== 1){
+                
                 while(found == false){
                     rand = Math.ceil(Math.random()*gameState.allies.length)-1;
                     if(gameState.allies[rand] && gameState.allies[rand].health > 0){
@@ -662,7 +734,7 @@ let gameState = {
                 }
                 hero.moves[0].action(scene,hero,gameState.allies[rand]);
                 hero.moved = 1;
-                hero.move2Countdown = gameState.moves.revive.countdown;
+                hero.move2Countdown --;
             }
         }
     },
@@ -720,7 +792,7 @@ let gameState = {
     theWorldStats:{
         name: 'The World',
         sprite: 'THEWORLD',
-        health: 200,
+        health: 300,
         defense: 0,
         level: 1,
         moves:[],
