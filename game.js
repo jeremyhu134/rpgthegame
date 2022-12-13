@@ -334,8 +334,8 @@ let gameState = {
             type: 'enemy',
             countdown: 2,
             damage:{
-                high: 29,
-                low: 9
+                high: 35,
+                low: 15
             },
             action: function(scene,user,target){
                 var rand = (Math.ceil(Math.random()*(gameState.moves.superBash.damage.high-gameState.moves.superBash.damage.low))+gameState.moves.superBash.damage.low)-target.defense+user.attackBoost;
