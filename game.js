@@ -379,7 +379,7 @@ let gameState = {
             sprite: 'arrowShot',
             description: "single shot attack",
             type: 'enemy',
-            countdown: 2,
+            countdown: 1,
             damage:{
                 high: 15,
                 low: 10
