@@ -140,7 +140,7 @@ let gameState = {
                     gameState.moveIcon2.setTexture(`emptyIcon`);
                     gameState.moveIcon3.setTexture(`emptyIcon`);
                     gameState.selectedMove = '';
-                }else if(status == 'ally' && gameState.attacking == true && gameState.selectedMove.type == 'ally'){
+                }else if(status == 'ally' && gameState.attacking == true && gameState.selectedMove.type == 'ally' && hero.health > 0){
                     gameState.selectedMove.action(scene,gameState.selectedHero,hero);
                     gameState.attacking = false;
                     gameState.selectedHero.moved = 1;
@@ -609,7 +609,7 @@ let gameState = {
             countdown: 0,
             damage:{
                 high: 30,
-                low: 20
+                low: 15
             },
             action: function(scene,user,target){
                 var rand = (Math.ceil(Math.random()*(gameState.moves.muda.damage.high-gameState.moves.muda.damage.low))+gameState.moves.muda.damage.low)-target.defense;
@@ -835,7 +835,7 @@ let gameState = {
     theWorldStats:{
         name: 'The World',
         sprite: 'THEWORLD',
-        health: 500,
+        health: 400,
         defense: 0,
         level: 1,
         moves:[],
