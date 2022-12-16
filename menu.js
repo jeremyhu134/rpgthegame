@@ -35,6 +35,7 @@ class MenuScene extends Phaser.Scene {
         this.load.image('plasmaShowerIcon','heroimages/plasmaShowerIcon.png');
         this.load.image('bashIcon','heroimages/bashIcon.png');
         this.load.image('arrowShotIcon','heroimages/arrowShotIcon.png');
+        this.load.image('arrowRainIcon','heroimages/arrowRainIcon.png');
         this.load.spritesheet('superBashAnimate','heroimages/superBashAnimate.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('bashAnimate','heroimages/bashAnimate.png',{frameWidth: 50,frameHeight:40});
         
@@ -54,6 +55,7 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('target','heroimages/target.png',{frameWidth: 40,frameHeight:40});
         this.load.spritesheet('mudaAnim','heroimages/mudaAnim.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('magicBallRain','heroimages/magicBallRain.png',{frameWidth: 50,frameHeight:50});
+        this.load.spritesheet('arrowRainAnim','heroimages/arrowRainAnim.png',{frameWidth: 50,frameHeight:50});
         this.load.image('healthImage','heroimages/healthImage.png');
         this.load.image('newGame','heroimages/newGame.png');
         this.load.image('continue','heroimages/continue.png');
@@ -598,6 +600,11 @@ class GameScene extends Phaser.Scene {
             key: 'MBRAnim',
             frameRate: 10,
             frames:this.anims.generateFrameNames('magicBallRain',{start: 0,end: 6})
+        });
+        this.anims.create({
+            key: 'ARAnim',
+            frameRate: 12,
+            frames:this.anims.generateFrameNames('arrowRainAnim',{start: 0,end: 5})
         });
         
         

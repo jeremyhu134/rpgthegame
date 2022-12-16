@@ -96,6 +96,7 @@ let gameState = {
         character.maxHp = Math.ceil(stats.health+((character.level-1)*1.3));
         character.stats = stats;
         character.attackBoost = 0;
+        character.invisible = false;
         function create(hero){
             gameState.createHealthBar(scene,hero,hero.maxHp);
             stats.integrateMoves(hero);
@@ -262,7 +263,9 @@ let gameState = {
             type: 'self',
             countdown: 0,
             action: function(scene,user,target){
-                user.defense += 1;
+                if(user.defense <6){
+                    user.defense += 2;
+                }
                 var def = scene.add.sprite(user.x+50,user.y-40,'defenseUp').setScale(0.8);
                 def.anims.play('defenseUpAnim',true);
                 scene.time.addEvent({
@@ -282,7 +285,9 @@ let gameState = {
             type: 'self',
             countdown: 0,
             action: function(scene,user,target){
-                user.attackBoost += 1;
+                if(user.attackBoost <5){
+                    user.attackBoost += 2;
+                }
                 var attck = scene.add.sprite(user.x+50,user.y-40,'attackUp').setScale(0.8);
                 attck.anims.play('attackUpAnim',true);
                 scene.time.addEvent({
@@ -398,6 +403,43 @@ let gameState = {
                 scene.physics.add.overlap(spear, target,(spearT, userT)=>{
                     spearT.destroy();
                     target.health -= rand;
+                });
+            }
+        },
+        arrowRain:{
+            name: "Raining Arrows",
+            sprite: 'arrowRain',
+            description: "Arrows that hit multiple targets",
+            type: 'enemy',
+            countdown: 2,
+            damage:{
+                high: 10,
+                low: 8
+            },
+            action: function(scene,user,target){
+                var rand = (Math.ceil(Math.random()*(gameState.moves.arrowRain.damage.high-gameState.moves.arrowRain.damage.low))+gameState.moves.arrowRain.damage.low)+user.attackBoost-target.defense;
+                if(rand < 0){
+                    rand = 0;
+                }
+                if(gameState.enemies[0]){
+                   gameState.enemies[0].health -= rand; 
+                }if(gameState.enemies[1]){
+                    gameState.enemies[1].health -= rand;
+                }if(gameState.enemies[2]){
+                    gameState.enemies[2].health -= rand;
+                }if(gameState.enemies[3]){
+                    gameState.enemies[3].health -= rand;
+                }
+                
+                var arrows = scene.physics.add.sprite(1200-250, 250,'arrowRainAnim').setDepth(2).setScale(7);
+                arrows.anims.play('ARAnim');
+                scene.time.addEvent({
+                    delay: 2000,
+                    callback: ()=>{
+                        arrows.destroy();
+                    },  
+                    startAt: 0,
+                    timeScale: 1
                 });
             }
         },
@@ -566,11 +608,11 @@ let gameState = {
             type: 'enemy',
             countdown: 0,
             damage:{
-                high: 40,
-                low: 25
+                high: 30,
+                low: 20
             },
             action: function(scene,user,target){
-                var rand = (Math.ceil(Math.random()*(gameState.moves.muda.damage.high-gameState.moves.muda.damage.low))+gameState.moves.muda.damage.low);
+                var rand = (Math.ceil(Math.random()*(gameState.moves.muda.damage.high-gameState.moves.muda.damage.low))+gameState.moves.muda.damage.low)-target.defense;
                 if(rand < 0){
                     rand = 0;
                 }
@@ -629,7 +671,7 @@ let gameState = {
     wizardStats:{
         name: 'Wizard',
         sprite: 'wizard',
-        health: 35,
+        health: 40,
         defense: 0,
         level: 1,
         moves:[],
@@ -645,7 +687,7 @@ let gameState = {
     mageStats:{
         name: 'Mage',
         sprite: 'mage',
-        health: 30,
+        health: 35,
         defense: 2,
         level: 1,
         moves:[],
@@ -667,6 +709,7 @@ let gameState = {
         moves:[],
         integrateMoves: function(hero){
             hero.moves.push(gameState.moves.arrowShot);
+            hero.moves.push(gameState.moves.arrowRain);
         },
         computer: function(scene,hero){
             
@@ -690,7 +733,7 @@ let gameState = {
             var found = false;
             while(found == false){
                 rand = Math.ceil(Math.random()*gameState.allies.length)-1;
-                if(gameState.allies[rand] && gameState.allies[rand].health > 0){
+                if(gameState.allies[rand] && gameState.allies[rand].health > 0 && gameState.allies[rand].invisible == false){
                     found = true;
                 }
             }
@@ -728,7 +771,7 @@ let gameState = {
                 
                 while(found == false){
                     rand = Math.ceil(Math.random()*gameState.allies.length)-1;
-                    if(gameState.allies[rand] && gameState.allies[rand].health > 0){
+                    if(gameState.allies[rand] && gameState.allies[rand].health > 0 && gameState.allies[rand].invisible == false){
                         found = true;
                     }
                 }
@@ -754,7 +797,7 @@ let gameState = {
                 var found = false;
                 while(found == false){
                     rand = Math.ceil(Math.random()*gameState.allies.length)-1;
-                    if(gameState.allies[rand] && gameState.allies[rand].health > 0){
+                    if(gameState.allies[rand] && gameState.allies[rand].health > 0 && gameState.allies[rand].invisible == false){
                         found = true;
                     }
                 }
@@ -779,7 +822,7 @@ let gameState = {
             var found = false;
             while(found == false){
                 rand = Math.ceil(Math.random()*gameState.allies.length)-1;
-                if(gameState.allies[rand] && gameState.allies[rand].health > 0){
+                if(gameState.allies[rand] && gameState.allies[rand].health > 0 && gameState.allies[rand].invisible == false){
                     found = true;
                 }
             }
@@ -792,7 +835,7 @@ let gameState = {
     theWorldStats:{
         name: 'The World',
         sprite: 'THEWORLD',
-        health: 300,
+        health: 500,
         defense: 0,
         level: 1,
         moves:[],
@@ -804,7 +847,7 @@ let gameState = {
             var found = false;
             while(found == false){
                 rand = Math.ceil(Math.random()*gameState.allies.length)-1;
-                if(gameState.allies[rand] && gameState.allies[rand].health > 0){
+                if(gameState.allies[rand] && gameState.allies[rand].health > 0 && gameState.allies[rand].invisible == false){
                     found = true;
                 }
             }
