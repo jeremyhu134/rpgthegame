@@ -24,7 +24,7 @@ const game = new Phaser.Game(config);
 let gameState = {
     
     thingsToSave: {
-        level: 9
+        level: 1
     },
     
     
