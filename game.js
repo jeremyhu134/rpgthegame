@@ -24,7 +24,7 @@ const game = new Phaser.Game(config);
 let gameState = {
     
     thingsToSave: {
-        level: 1
+        level: 9
     },
     
     
@@ -140,7 +140,7 @@ let gameState = {
                     gameState.moveIcon2.setTexture(`emptyIcon`);
                     gameState.moveIcon3.setTexture(`emptyIcon`);
                     gameState.selectedMove = '';
-                }else if(status == 'ally' && gameState.attacking == true && gameState.selectedMove.type == 'ally' && hero.health > 0){
+                }else if(status == 'ally' && gameState.attacking == true && gameState.selectedMove.type == 'ally'){
                     gameState.selectedMove.action(scene,gameState.selectedHero,hero);
                     gameState.attacking = false;
                     gameState.selectedHero.moved = 1;
@@ -312,6 +312,22 @@ let gameState = {
                 heal.anims.play('healAnimation',true);
             }
         },
+        teamHeal:{
+            name: "Team Heal",
+            sprite: 'heal',
+            description: "Heals all allies",
+            type: 'ally',
+            countdown: 2,
+            action: function(scene,user,target){
+                for (var i = 0; i < gameState.enemies.length; i++){
+                    if(gameState.enemies[i] && gameState.enemies[i].health > 0){
+                        gameState.enemies[i].health += 5;
+                        var heal = scene.add.sprite(gameState.enemies[i].x,gameState.enemies[i].y,'healAnimate').setScale(2);
+                        heal.anims.play('healAnimation',true);
+                    }
+                }
+            }
+        },
         bash:{
             name: "Bash",
             sprite: 'bash',
@@ -350,6 +366,65 @@ let gameState = {
                 target.health -= rand;
                 var superBash = scene.add.sprite(target.x,target.y,'superBashAnimate').setScale(2);
                 superBash.anims.play('superBashAnimation',true);
+            }
+        },
+        logThrow:{
+            name: "Log Throw",
+            sprite: '',
+            description: "Rolling log does decent area damage",
+            type: 'enemy',
+            countdown: 2,
+            damage:{
+                high: 15,
+                low: 10
+            },
+            action: function(scene,user,target){
+                var rand = (Math.ceil(Math.random()*(gameState.moves.logThrow.damage.high-gameState.moves.logThrow.damage.low))+gameState.moves.logThrow.damage.low)-target.defense+user.attackBoost;
+                if(rand < 0){
+                    rand = 0;
+                }
+                var tar = {
+                    x: 600,
+                    y: 350
+                };
+                console.log(rand);
+                var log = scene.physics.add.sprite(650, 350,'log').setDepth(1).setScale(3);
+                log.anims.play('rollingLog',true);
+                scene.physics.moveToObject(log,tar,500);
+                gameState.allies[0].hit = 0;
+                gameState.allies[1].hit = 0;
+                gameState.allies[2].hit = 0;
+                gameState.allies[3].hit = 0;
+                if(gameState.allies[0]){
+                    scene.physics.add.overlap(log, gameState.allies[0],(spearT, userT)=>{
+                        if(gameState.allies[0].hit == 0){
+                            gameState.allies[0].hit++;
+                            gameState.allies[0].health -= rand;
+                        }
+                    });
+                }if(gameState.allies[1]){
+                    scene.physics.add.overlap(log, gameState.allies[1],(spearT, userT)=>{
+                        if(gameState.allies[1].hit == 0){
+                            gameState.allies[1].hit++;
+                            gameState.allies[1].health -= rand;
+                        }
+                    });
+                }if(gameState.allies[2]){
+                    scene.physics.add.overlap(log, gameState.allies[2],(spearT, userT)=>{
+                        if(gameState.allies[2].hit == 0){
+                            gameState.allies[2].hit++;
+                            gameState.allies[2].health -= rand;
+                        }
+                    });
+                }if(gameState.allies[3]){
+                    scene.physics.add.overlap(log, gameState.allies[3],(spearT, userT)=>{
+                        if(gameState.allies[3].hit == 0){
+                            gameState.allies[3].hit++;
+                            gameState.allies[3].health -= rand;
+                        }
+                    }); 
+                }
+                
             }
         },
         spearThrow:{
@@ -538,7 +613,7 @@ let gameState = {
             type: 'enemy',
             countdown: 10,
             damage:{
-                high: 60,
+                high: 45,
                 low: 25
             },
             action: function(scene,user,target){
@@ -828,6 +903,63 @@ let gameState = {
             }
             hero.moves[0].action(scene,hero,gameState.allies[rand]);
             hero.moved = 1;
+        }
+    },
+    trollBruteStats:{
+        name: 'Troll Brute',
+        sprite: 'trollBrute',
+        health: 60,
+        defense: 3,
+        level: 1,
+        moves:[],
+        integrateMoves: function(hero){
+            hero.moves.push(gameState.moves.logThrow);
+        },
+        computer: function(scene,hero){
+            if(hero.move1Countdown <= 0){
+                var rand;
+                var found = false;
+                while(found == false){
+                    rand = Math.ceil(Math.random()*gameState.allies.length)-1;
+                    if(gameState.allies[rand] && gameState.allies[rand].health > 0 && gameState.allies[rand].invisible == false){
+                        found = true;
+                    }
+                }
+                hero.moves[0].action(scene,hero,gameState.allies[rand]);
+                hero.moved = 1;
+                hero.move1Countdown = hero.moves[0].countdown;
+            }else {
+                hero.move1Countdown --;
+            }
+        }
+    },
+    
+    trollCheifStats:{
+        name: 'Troll Cheif',
+        sprite: 'trollCheif',
+        health: 70,
+        defense: 0,
+        level: 1,
+        moves:[],
+        integrateMoves: function(hero){
+            hero.moves.push(gameState.moves.teamHeal);
+        },
+        computer: function(scene,hero){
+            if(hero.move1Countdown <= 0){
+                var rand;
+                var found = false;
+                while(found == false){
+                    rand = Math.ceil(Math.random()*gameState.allies.length)-1;
+                    if(gameState.allies[rand] && gameState.allies[rand].health > 0 && gameState.allies[rand].invisible == false){
+                        found = true;
+                    }
+                }
+                hero.moves[0].action(scene,hero,gameState.allies[rand]);
+                hero.moved = 1;
+                hero.move1Countdown = hero.moves[0].countdown;
+            }else {
+                hero.move1Countdown --;
+            }
         }
     },
     
