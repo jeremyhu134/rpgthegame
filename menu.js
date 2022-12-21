@@ -17,6 +17,7 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('troll','heroimages/troll.png',{frameWidth: 100,frameHeight:100});
         this.load.spritesheet('trollBrute','heroimages/trollBrute.png',{frameWidth: 120,frameHeight:120});
         this.load.spritesheet('trollCheif','heroimages/trollCheif.png',{frameWidth: 140,frameHeight:140});
+        this.load.spritesheet('trollKingCrok','heroimages/trollKingCrok.png',{frameWidth: 200,frameHeight:200});
         this.load.spritesheet('endTurn','heroimages/endTurn.png',{frameWidth: 100,frameHeight:50});
         this.load.spritesheet('selfDestruct','heroimages/selfDestruct.png',{frameWidth: 32,frameHeight:32});
         this.load.spritesheet('THEWORLD','heroimages/THEWORLD.png',{frameWidth: 234,frameHeight:300});
@@ -59,6 +60,7 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('magicBallRain','heroimages/magicBallRain.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('arrowRainAnim','heroimages/arrowRainAnim.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('log','heroimages/log.png',{frameWidth: 100,frameHeight:100});
+        this.load.spritesheet('hammerSmash','heroimages/hammerSmash.png',{frameWidth: 100,frameHeight:100});
         this.load.image('healthImage','heroimages/healthImage.png');
         this.load.image('newGame','heroimages/newGame.png');
         this.load.image('continue','heroimages/continue.png');
@@ -67,14 +69,21 @@ class MenuScene extends Phaser.Scene {
     create() {
         var scene = this;
         
-        var bg = this.physics.add.sprite(0,0,'background').setOrigin(0,0).setScale(window.innerHeight/675).setDepth(0);
-        this.anims.create({
-            key: 'bganimate',
-            frameRate: 3,
-            repeat: -1,
-            frames:this.anims.generateFrameNames('background',{start: 0,end: 2})
-        });
-        bg.anims.play('bganimate','true');
+        if(gameState.thingsToSave.level >= 0 && gameState.thingsToSave.level <= 5){
+            var bg = this.physics.add.sprite(0,0,'background').setOrigin(0,0).setScale(window.innerHeight/675).setDepth(0);
+            this.anims.create({
+                key: 'bganimate',
+                frameRate: 3,
+                repeat: -1,
+                frames:this.anims.generateFrameNames('background',{start: 0,end: 2})
+            });
+            bg.anims.play('bganimate','true');
+        }else if(gameState.thingsToSave.level >= 6 && gameState.thingsToSave.level <= 10){
+            var bg = this.physics.add.sprite(0,0,'snowBg').setOrigin(0,0).setScale(1).setDepth(0);
+        }
+        else if(gameState.thingsToSave.level >= 11 && gameState.thingsToSave.level <= 11){
+            var bg = this.physics.add.sprite(0,0,'jojoBG').setOrigin(0,0).setScale(1).setDepth(0);
+        }
         
         gameState.loadSave();
         var title = this.add.image(600,100,'gameTitle').setInteractive();
@@ -212,13 +221,13 @@ class GameScene extends Phaser.Scene {
                             gameState.target8.setFrame(0);
                         }
                     }else if(gameState.selectedMove.type == 'enemy'){
-                        if(gameState.enemies[0]){
+                        if(gameState.enemies[0] && gameState.enemies[0].health > 0){
                             gameState.target5.setFrame(2);
-                        }if(gameState.enemies[1]){
+                        }if(gameState.enemies[1] && gameState.enemies[1].health > 0){
                             gameState.target6.setFrame(2);
-                        }if(gameState.enemies[2]){
+                        }if(gameState.enemies[2] && gameState.enemies[2].health > 0){
                             gameState.target7.setFrame(2);
-                        }if(gameState.enemies[3]){
+                        }if(gameState.enemies[3] && gameState.enemies[3].health > 0){
                             gameState.target8.setFrame(2);
                         }
                         if(gameState.allies[0]){
@@ -511,6 +520,18 @@ class GameScene extends Phaser.Scene {
             frames:this.anims.generateFrameNames('trollCheif',{start: 4,end: 6})
         });
         this.anims.create({
+            key: 'trollKingCrokIdle',
+            frameRate: 5,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('trollKingCrok',{start: 0,end: 3})
+        });
+        this.anims.create({
+            key: 'trollKingCrokDeath',
+            frameRate: 10,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('trollKingCrok',{start: 4,end: 6})
+        });
+        this.anims.create({
             key: 'mageIdle',
             frameRate: 5,
             repeat: -1,
@@ -639,6 +660,11 @@ class GameScene extends Phaser.Scene {
             repeat: -1,
             frames:this.anims.generateFrameNames('log',{start: 0,end: 4})
         });
+        this.anims.create({
+            key: 'hammersmashing',
+            frameRate: 15,
+            frames:this.anims.generateFrameNames('hammerSmash',{start: 0,end: 7})
+        });
         
         
         
@@ -653,12 +679,12 @@ class GameScene extends Phaser.Scene {
                 var allyDead = 0;
                 var enemyDead = 0;
                 for(var i = 0; i < gameState.allies.length; i++){
-                    if(gameState.allies[i] && gameState.allies[i].health <= 0){
+                    if(gameState.allies[i] && gameState.allies[i].health <= 0 || gameState.allies[i] == null){
                         allyDead++;
                     }
                 }
                 for(var i = 0; i < gameState.enemies.length; i++){
-                    if(gameState.enemies[i] && gameState.enemies[i].health <= 0){
+                    if(gameState.enemies[i] && gameState.enemies[i].health <= 0 || gameState.enemies[i] == null){
                         enemyDead++;
                     }
                 }
@@ -849,6 +875,14 @@ class GameScene extends Phaser.Scene {
             gameState.createHero(this,gameState.trollBruteStats,'enemy');
             gameState.createHero(this,gameState.trollBruteStats,'enemy');
             gameState.createHero(this,gameState.trollCheifStats,'enemy');
+        }
+        else if(gameState.thingsToSave.level == 10){
+            gameState.createHero(this,gameState.soldierStats,'ally');
+            gameState.createHero(this,gameState.mageStats,'ally');
+            gameState.createHero(this,gameState.wizardStats,'ally');
+            gameState.createHero(this,gameState.archerStats,'ally');
+            gameState.enemies[0] = null;
+            gameState.createHero(this,gameState.trollKingCrokStats,'enemy');
         }
         else if(gameState.thingsToSave.level >= 11){
             gameState.createHero(this,gameState.soldierStats,'ally');

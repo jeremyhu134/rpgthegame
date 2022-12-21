@@ -24,7 +24,7 @@ const game = new Phaser.Game(config);
 let gameState = {
     
     thingsToSave: {
-        level: 1
+        level: 10
     },
     
     
@@ -451,6 +451,34 @@ let gameState = {
                 scene.physics.add.overlap(spear, target,(spearT, userT)=>{
                     spearT.destroy();
                     target.health -= rand;
+                });
+            }
+        },
+        hammerSmash:{
+            name: "Hammer Smash",
+            sprite: 'hammerSmash',
+            description: "Heavy basic smash attack",
+            type: 'enemy',
+            countdown: 3,
+            damage:{
+                high: 50,
+                low: 40
+            },
+            action: function(scene,user,target){
+                var rand = (Math.ceil(Math.random()*(gameState.moves.hammerSmash.damage.high-gameState.moves.hammerSmash.damage.low))+gameState.moves.hammerSmash.damage.low)-target.defense+user.attackBoost;
+                if(rand < 0){
+                    rand = 0;
+                }
+                target.health -= rand;
+                var bash = scene.add.sprite(target.x,target.y,'hammerSmash').setScale(1);
+                bash.anims.play('hammersmashing',true);
+                scene.time.addEvent({
+                    delay: 1000,
+                    callback: ()=>{
+                        bash.destroy();
+                    },  
+                    startAt: 0,
+                    timeScale: 1
                 });
             }
         },
@@ -959,6 +987,34 @@ let gameState = {
                 hero.move1Countdown = hero.moves[0].countdown;
             }else {
                 hero.move1Countdown --;
+            }
+        }
+    },
+    trollKingCrokStats:{
+        name: 'Troll King Crok',
+        sprite: 'trollKingCrok',
+        health: 150,
+        defense: 10,
+        level: 1,
+        moves:[],
+        integrateMoves: function(hero){
+            hero.moves.push(gameState.moves.hammerSmash);
+        },
+        computer: function(scene,hero){
+            if(hero.move1Countdown <= 0){
+                var rand;
+                var found = false;
+                while(found == false){
+                    rand = Math.ceil(Math.random()*gameState.allies.length)-1;
+                    if(gameState.allies[rand] && gameState.allies[rand].health > 0 && gameState.allies[rand].invisible == false){
+                        found = true;
+                    }
+                }
+                hero.moves[0].action(scene,hero,gameState.allies[rand]);
+                hero.moved = 1;
+                hero.move1Countdown = hero.moves[0].countdown;
+            }else{
+                
             }
         }
     },
