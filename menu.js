@@ -68,7 +68,7 @@ class MenuScene extends Phaser.Scene {
     
     create() {
         var scene = this;
-        
+        gameState.loadSave();
         if(gameState.thingsToSave.level >= 0 && gameState.thingsToSave.level <= 5){
             var bg = this.physics.add.sprite(0,0,'background').setOrigin(0,0).setScale(window.innerHeight/675).setDepth(0);
             this.anims.create({
@@ -85,7 +85,7 @@ class MenuScene extends Phaser.Scene {
             var bg = this.physics.add.sprite(0,0,'jojoBG').setOrigin(0,0).setScale(1).setDepth(0);
         }
         
-        gameState.loadSave();
+        
         var title = this.add.image(600,100,'gameTitle').setInteractive();
         
         var newGame;
