@@ -24,7 +24,7 @@ const game = new Phaser.Game(config);
 let gameState = {
     
     thingsToSave: {
-        level: 10
+        level: 1
     },
     
     
@@ -711,8 +711,8 @@ let gameState = {
             type: 'enemy',
             countdown: 0,
             damage:{
-                high: 30,
-                low: 15
+                high: 40,
+                low: 25
             },
             action: function(scene,user,target){
                 var rand = (Math.ceil(Math.random()*(gameState.moves.muda.damage.high-gameState.moves.muda.damage.low))+gameState.moves.muda.damage.low)-target.defense;
