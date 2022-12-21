@@ -459,7 +459,7 @@ let gameState = {
             sprite: 'hammerSmash',
             description: "Heavy basic smash attack",
             type: 'enemy',
-            countdown: 3,
+            countdown: 2,
             damage:{
                 high: 50,
                 low: 40
