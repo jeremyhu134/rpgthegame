@@ -605,8 +605,8 @@ let gameState = {
             type: 'enemy',
             countdown: 2,
             damage:{
-                high: 30,
-                low: 20
+                high: 25,
+                low: 15
             },
             action: function(scene,user,target){
                 var rand = (Math.ceil(Math.random()*(gameState.moves.magicRay.damage.high-gameState.moves.magicRay.damage.low))+gameState.moves.magicRay.damage.low)+user.attackBoost;
